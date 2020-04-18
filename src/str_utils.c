@@ -6,13 +6,13 @@ string string_duplicate(const_string str)
 {
     if (!str)
         return NULL;
-    char *result = calloc(sizeof(char), strlen(str) + 1);
+    char *result = newmem(sizeof(char), strlen(str) + 1);
     strcpy(result, str);
     return result;
 }
 void string_dealloc(string str)
 {
-    free(str);
+    delete(str);
 }
 bool string_to_bool(string str, bool *success)
 {

@@ -2,6 +2,7 @@
 
 #define DB_H
 
+#include "memcheck.h"
 #include "stdbool.h"
 #include "stdlib.h"
 #include "basic_linked_lists.h"

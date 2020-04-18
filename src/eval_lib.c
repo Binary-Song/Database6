@@ -36,12 +36,12 @@ char *OP_plus(const char *a, const char *b)
     double nb = to_double(b, &success);
     if (!success)
     {
-        char *res = calloc(1, strlen(a) + strlen(b) + 1);
+        char *res = newmem(1, strlen(a) + strlen(b) + 1);
         strcat(res, a);
         strcat(res, b);
         return res;
     }
-    char *res = calloc(1, 20);
+    char *res = newmem(1, 20);
     snprintf(res, 19, "%.3lf", na + nb);
     return res;
 }
@@ -59,7 +59,7 @@ char *OP_minus(const char *a, const char *b)
     {
         return NULL;
     }
-    char *res = calloc(1, 20);
+    char *res = newmem(1, 20);
     snprintf(res, 19, "%.3lf", na - nb);
     return res;
 }
@@ -77,7 +77,7 @@ char *OP_mult(const char *a, const char *b)
     {
         return NULL;
     }
-    char *res = calloc(1, 20);
+    char *res = newmem(1, 20);
     snprintf(res, 19, "%.3lf", na * nb);
     return res;
 }
@@ -95,7 +95,7 @@ char *OP_div(const char *a, const char *b)
     {
         return NULL;
     }
-    char *res = calloc(1, 20);
+    char *res = newmem(1, 20);
     snprintf(res, 19, "%.3lf", na / nb);
     return res;
 }
@@ -118,7 +118,7 @@ char *OP_greater(const char *a, const char *b)
     {
         return NULL;
     }
-    char *res = calloc(1, 20);
+    char *res = newmem(1, 20);
     if (na - nb > ERROR)
         snprintf(res, 19, "1");
     else
@@ -140,7 +140,7 @@ char *OP_less(const char *a, const char *b)
     {
         return NULL;
     }
-    char *res = calloc(1, 20);
+    char *res = newmem(1, 20);
     if (nb - na > ERROR)
         snprintf(res, 19, "1");
     else
@@ -157,7 +157,7 @@ char *OP_equal(const char *a, const char *b)
     bool success = true;
     double na = to_double(a, &success); //只有失败时才会改success的值
     double nb = to_double(b, &success);
-    char *res = calloc(1, 20);
+    char *res = newmem(1, 20);
     if (!success)
     {
         if (!strcmp(a, b))
@@ -190,7 +190,7 @@ char *OP_greater_or_eq(const char *a, const char *b)
     {
         return NULL;
     }
-    char *res = calloc(1, 20);
+    char *res = newmem(1, 20);
     if (na - nb > -ERROR)
         snprintf(res, 19, "1");
     else
@@ -211,7 +211,7 @@ char *OP_less_or_eq(const char *a, const char *b)
     {
         return NULL;
     }
-    char *res = calloc(1, 20);
+    char *res = newmem(1, 20);
     if (nb - na > -ERROR)
         snprintf(res, 19, "1");
     else
@@ -227,7 +227,7 @@ char *OP_not_equal(const char *a, const char *b)
     bool success = true;
     double na = to_double(a, &success); //只有失败时才会改success的值
     double nb = to_double(b, &success);
-    char *res = calloc(1, 20);
+    char *res = newmem(1, 20);
     if (!success)
     {
         if (strcmp(a, b))
@@ -261,7 +261,7 @@ char *FX_floor(const char *a)
     {
         return NULL;
     }
-    char *res = calloc(1, 20);
+    char *res = newmem(1, 20);
     snprintf(res, 19, "%.0lf", floor(na));
     return res;
 }
@@ -278,7 +278,7 @@ char *FX_round(const char *a)
     {
         return NULL;
     }
-    char *res = calloc(1, 20);
+    char *res = newmem(1, 20);
     snprintf(res, 19, "%.0lf", round(na));
     return res;
 }
@@ -299,7 +299,7 @@ char *OP_and(const char *a, const char *b)
     {
         return NULL;
     }
-    char *res = calloc(1, 20);
+    char *res = newmem(1, 20);
     if (!EQ(na, 0) && !EQ(nb, 0))
         snprintf(res, 19, "1");
     else
@@ -320,7 +320,7 @@ char *OP_or(const char *a, const char *b)
     {
         return NULL;
     }
-    char *res = calloc(1, 20);
+    char *res = newmem(1, 20);
     if (!EQ(na, 0) || !EQ(nb, 0))
         snprintf(res, 19, "1");
     else
@@ -341,7 +341,7 @@ char *OP_not(const char *a, const char *b)
     {
         return NULL;
     }
-    char *res = calloc(1, 20);
+    char *res = newmem(1, 20);
     if (EQ(na, 0))
         snprintf(res, 19, "1");
     else

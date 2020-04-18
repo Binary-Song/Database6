@@ -1,5 +1,6 @@
 #ifndef CMD_H
 #define CMD_H
+#include "memcheck.h"
 #include "basic_linked_lists.h"
 typedef struct _Pair
 {

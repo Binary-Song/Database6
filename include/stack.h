@@ -1,3 +1,4 @@
+#include "memcheck.h"
 #define DECALRE_STACK(T)                                         \
     typedef struct StackNode##T                                  \
     {                                                            \
@@ -22,7 +23,7 @@
 #define DEFINE_STACK(T)                                                    \
     Stack##T *stack_create##T(void (*dealloc)(T), T (*copy)(T))            \
     {                                                                      \
-        Stack##T *stack = calloc(sizeof(Stack##T), 1);                     \
+        Stack##T *stack = newmem(sizeof(Stack##T), 1);                     \
         stack->count = 0;                                                  \
         stack->dealloc = dealloc;                                          \
         stack->copy = copy;                                                \
@@ -36,7 +37,7 @@
             fprintf(stderr, "[ERROR](STACK): Unexpected null pointer.\n"); \
             exit(1);                                                       \
         }                                                                  \
-        StackNode##T *node = calloc(sizeof(StackNode##T), 1);              \
+        StackNode##T *node = newmem(sizeof(StackNode##T), 1);              \
         node->data = data;                                                 \
         node->inner = stack->top;                                          \
         stack->count++;                                                    \
@@ -59,10 +60,10 @@
             {                                                              \
                 stack->dealloc(curr->data);                                \
             }                                                              \
-            free(curr);                                                    \
+            delete(curr);                                                    \
             curr = inner;                                                  \
         }                                                                  \
-        free(stack);                                                       \
+        delete(stack);                                                       \
     }                                                                      \
     T stack_pop##T(Stack##T *stack)                                        \
     {                                                                      \
@@ -74,7 +75,7 @@
         T t = stack->copy(stack->top->data);                               \
         stack->dealloc(stack->top->data);                                  \
         StackNode##T *newtop = stack->top->inner;                          \
-        free(stack->top);                                                  \
+        delete(stack->top);                                                  \
         stack->top = newtop;                                               \
         stack->count--;                                                    \
         return t;                                                          \

@@ -45,7 +45,7 @@ List(string) * split(const char *m)
     while (*m)
     {
         int charsize = byte_count(m);
-        char *str = calloc(charsize + 1, 1);
+        char *str = newmem(charsize + 1, 1);
         strncpy(str, m, charsize);
         list_append(string)(ls, str);
         m += charsize;

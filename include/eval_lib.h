@@ -1,5 +1,6 @@
 #ifndef EVAL_LIB_H
 #define EVAL_LIB_H
+#include "memcheck.h"
 #include "eval.h"
 #include "stdbool.h"
 

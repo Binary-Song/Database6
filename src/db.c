@@ -180,7 +180,7 @@ bool _check_constraint(int field_index, int record_index)
         Calc calc = init_std_calc();
         list_append(Var)(calc.vars, accessor);
 
-        char *expr = calloc(1, strlen(field.constraint) + 10);
+        char *expr = newmem(1, strlen(field.constraint) + 10);
         sprintf(expr, "(%s)!=0", field.constraint);
 
         char *eval_result = eval(calc, expr);
@@ -188,10 +188,10 @@ bool _check_constraint(int field_index, int record_index)
         if (!eval_result || !strcmp(eval_result, "0"))
         {
             deinit_calc(calc);
-            free(expr);
+            delete(expr);
             return false;
         }
-        free(expr);
+        delete(expr);
         deinit_calc(calc);
         return true;
     }
@@ -470,7 +470,7 @@ void db_config_field(const_string field_name,                      //
                                set_info /*****/ ? new_info /********/ : oldfld.info,
                                set_unique /***/ ? new_unique /******/ : oldfld.unique);
 
-    list_set(Field)(FIELDS, target_i, newfld); //set 同时会调用free!
+    list_set(Field)(FIELDS, target_i, newfld); //set 同时会调用delete!
     CheckFieldInfo check_res = _check_field(target_i);
     if (check_res.pass)
     {
@@ -501,7 +501,7 @@ void db_config_field(const_string field_name,                      //
                  NS_LOG(field_name), check_res.index, check_res.another_index, NS_LOG(GET_VALUE(target_i, check_res.index)));
         }
 
-        list_set(Field)(FIELDS, target_i, oldfld); //set 同时会调用free!
+        list_set(Field)(FIELDS, target_i, oldfld); //set 同时会调用delete!
     }
 }
 
@@ -686,7 +686,7 @@ void db_list_all_records()
         fixed_print(f.name, 10, false);
         SET_COLOR(C_RESET);
         printf(" ");
-    }
+    }  
     printf("\n");
     Record r;
     Foreach(Record, r, RECORDS)
@@ -724,32 +724,32 @@ char *func_value(const char *a)
 
 void db_list_record(const char *filter, const char *sort)
 {
-    List(int) *indices = list_create(int)(NULL);
+    // List(int) *indices = list_create(int)(NULL);
 
-    Calc calc = init_std_calc();
-    Func func;
-    func.name = "value";
-    func.func = func_value;
-    list_append(Func)(calc.functions, func);
-    char *expr = calloc(strlen(filter) + 11, 1);
-    sprintf(expr, "(%s)!=0", filter);
+    // Calc calc = init_std_calc();
+    // Func func;
+    // func.name = "value";
+    // func.func = func_value;
+    // list_append(Func)(calc.functions, func);
+    // char *expr = newmem(strlen(filter) + 11, 1);
+    // sprintf(expr, "(%s)!=0", filter);
 
-    Record r;
-    record_index_context = 0;
-    Foreach(Record, r, RECORDS)
-    {
-        record_index_context++;
-        char *res = eval(calc, expr);
-        if (strcmp(res, "0")) //结果不为0,就认可
-        {
-            list_append(int)(indices, record_index_context);
-        }
-        free(res);
-    }
+    // Record r;
+    // record_index_context = 0;
+    // Foreach(Record, r, RECORDS)
+    // {
+    //     record_index_context++;
+    //     char *res = eval(calc, expr);
+    //     if (strcmp(res, "0")) //结果不为0,就认可
+    //     {
+    //         list_append(int)(indices, record_index_context);
+    //     }
+    //     delete(res);
+    // }
 
-    list_delete(int)(indices);
-    free(expr);
-    deinit_calc(calc);
+    // list_delete(int)(indices);
+    // delete(expr);
+    // deinit_calc(calc);
 }
 #pragma endregion
 

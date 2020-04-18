@@ -1,5 +1,6 @@
 #ifndef DEBUG_H
 #define DEBUG_H
+#include "memcheck.h"
 #include "stdarg.h"
 #include "stdio.h"
 #include "stdlib.h"

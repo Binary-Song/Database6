@@ -1,5 +1,6 @@
 #ifndef STRING_UTILS
 #define STRING_UTILS
+#include "memcheck.h"
 #include <stdbool.h>
 typedef char *string;
 typedef const char *const_string;

@@ -97,14 +97,14 @@ typedef struct _Token
 
 void token_dealloc(Token tok)
 {
-    free(tok.content);
+    delete(tok.content);
 }
 
 DECLARE_LIST(Token)
 ListToken *list_createToken(void (*dealloc)(Token))
 {
-    ListToken *list = calloc(sizeof(ListToken), 1);
-    list->head = calloc(sizeof(ListNodeToken), 1);
+    ListToken *list = newmem(sizeof(ListToken), 1);
+    list->head = newmem(sizeof(ListNodeToken), 1);
     list->dealloc = dealloc;
     list->count = 0;
     return list;
@@ -121,7 +121,7 @@ ListNodeToken *list_appendToken(ListToken *list, Token data)
     {
         node = node->next;
     }
-    node->next = calloc(sizeof(ListNodeToken), 1);
+    node->next = newmem(sizeof(ListNodeToken), 1);
     node->next->prev = node;
     node->next->data = data;
     list->count++;
@@ -157,10 +157,10 @@ void list_deleteToken(ListToken *list)
         {
             list->dealloc(curr->data);
         }
-        free(curr);
+        delete(curr);
         curr = next;
     }
-    free(list);
+    delete(list);
 }
 void list_removeToken(ListToken *list, int index, int count)
 {
@@ -196,7 +196,7 @@ void list_removeToken(ListToken *list, int index, int count)
                 {
                     list->dealloc(node->data);
                 }
-                free(node);
+                delete(node);
                 node = next;
                 --count;
                 list->count--;
@@ -235,7 +235,7 @@ ListNodeToken *list_insertToken(ListToken *list, int index, Token data)
         ++i;
         if (i == index)
         {
-            ListNodeToken *new_node = malloc(sizeof(ListNodeToken));
+            ListNodeToken *new_node = newmem(1, sizeof(ListNodeToken));
             new_node->data = data;
             ListNodeToken *prev = node->prev;
             ListNodeToken *mid = new_node;
@@ -250,7 +250,7 @@ ListNodeToken *list_insertToken(ListToken *list, int index, Token data)
     }
     if (i == index - 1)
     {
-        ListNodeToken *new_node = malloc(sizeof(ListNodeToken));
+        ListNodeToken *new_node = newmem(1, sizeof(ListNodeToken));
         new_node->data = data;
         new_node->next = NULL;
         new_node->prev = node;
@@ -462,7 +462,7 @@ List(Token) * Scan(const char *cmd)
             state = 0;
             break;
         case 3: //单词尾空格
-            newword = calloc(1, current - start + 1);
+            newword = newmem(1, current - start + 1);
             strncpy(newword, start, current - start);
             tok.content = newword;
             tok.word_type = nWT_KEYWORD;
@@ -470,8 +470,8 @@ List(Token) * Scan(const char *cmd)
             start = current + 1;
             state = 0;
             break;
-        case 5: //引号结束
-            newword = calloc(1, current - start);
+        case 5: //引号结束 
+            newword = newmem(1, current - start);
             strncpy(newword, start + 1, current - start - 1);
             tok.content = newword;
             tok.word_type = nWT_ARGSTR;
@@ -480,7 +480,7 @@ List(Token) * Scan(const char *cmd)
             state = 0;
             break;
         case 8: //数字结束
-            newword = calloc(1, current - start + 1);
+            newword = newmem(1, current - start + 1);
             strncpy(newword, start, current - start);
             tok.content = newword;
             tok.word_type = nWT_INT;
@@ -516,7 +516,7 @@ List(Token) * Scan(const char *cmd)
         //处理string参数中的转义字符
         if (tok.word_type == nWT_ARGSTR)
         {
-            char *new_content = calloc(1, strlen(tok.content) + 1);
+            char *new_content = newmem(1, strlen(tok.content) + 1);
             char *p = tok.content; //p用来遍历tok.content
             char *q = new_content; //q用来遍历new_content
             bool escaped = false;
@@ -710,8 +710,8 @@ Pair Pair_init(string key, string value)
 
 void Pair_dealloc(Pair pair)
 {
-    free(pair.key);
-    free(pair.value);
+    delete(pair.key);
+    delete(pair.value);
 }
 
 Tag Tag_init(string tag)
@@ -723,7 +723,7 @@ Tag Tag_init(string tag)
 
 void Tag_dealloc(Tag tag)
 {
-    free(tag.value);
+    delete(tag.value);
 }
 
 typedef struct _ParseResult
