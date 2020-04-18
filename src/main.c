@@ -8,11 +8,14 @@
 #include "stdio.h"
 #include "messenger.h"
 #include "time.h"
+#include "string.h"
 char *log_name;
 
 int main()
 {
-    log_name = calloc(1, 50);
+    memcheck_begin();
+
+    log_name = newmem(1, 50);
 
     time_t now;
 
@@ -30,13 +33,19 @@ int main()
     {
         msg("Awaiting Command\n");
         printf(">");
-        char *input = calloc(1, 500);
+        char *input = newmem(1, 500);
         fgets(input, 499, stdin);
+        if (!strcmp(input, "q\n"))
+        { 
+            delete (input);
+            break;
+        }
         log("INPUT COMMAND:%s\n", input);
         exec(input);
-        free(input);
+        delete (input);
     }
 
+    db_deinit();
     //     //exec("add-field format \"no\\\"format\" constr \"noconstr\" unique ");
     //     // printf(">>>\n");
     //     db_init();
@@ -58,6 +67,7 @@ int main()
     //    // db_list_all_records();
 
     //     db_deinit();
-    free(log_name);
+    delete (log_name);
+    memcheck_end();
     return 0;
 }

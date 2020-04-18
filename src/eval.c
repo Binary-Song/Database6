@@ -16,9 +16,9 @@ const int type_leftparn = 3;
 const int type_rightparn = 4;
 const int type_none = -1;
 
-void element_free(Element e)
+void element_delete(Element e)
 {
-     free(e.literal);
+     delete(e.literal);
 }
 
 Element element_copy(Element src)
@@ -110,9 +110,9 @@ char *eval(Calc calc, const char *expr)
      }
 
      int expr_len = strlen(expr);
-     List(Element) *elements = list_create(Element)(element_free);
+     List(Element) *elements = list_create(Element)(element_delete);
      bool quoted = false;
-     char *literal = (char *)calloc(sizeof(char), expr_len + 1);
+     char *literal = (char *)newmem(sizeof(char), expr_len + 1);
      int literal_length = 0;
      for (int x = 0; x <= expr_len; x++)
      {
@@ -133,7 +133,7 @@ char *eval(Calc calc, const char *expr)
                newelement.literal = literal;
                newelement.type = type_value;
                list_append(Element)(elements, newelement);
-               literal = (char *)calloc(sizeof(char), expr_len + 1);
+               literal = (char *)newmem(sizeof(char), expr_len + 1);
                literal_length = 0;
                continue;
           }
@@ -155,7 +155,7 @@ char *eval(Calc calc, const char *expr)
                     newelement.type = type_leftparn;
                     list_append(Element)(elements, newelement);
 
-                    literal = (char *)calloc(sizeof(char), expr_len + 1);
+                    literal = (char *)newmem(sizeof(char), expr_len + 1);
                     literal_length = 0;
                     continue;
                }
@@ -167,7 +167,7 @@ char *eval(Calc calc, const char *expr)
                     newelement.type = type_rightparn;
                     list_append(Element)(elements, newelement);
 
-                    literal = (char *)calloc(sizeof(char), expr_len + 1);
+                    literal = (char *)newmem(sizeof(char), expr_len + 1);
                     literal_length = 0;
                     continue;
                }
@@ -182,12 +182,12 @@ char *eval(Calc calc, const char *expr)
                     newelement.type = thistype;
                     list_append(Element)(elements, newelement);
 
-                    literal = (char *)calloc(sizeof(char), expr_len + 1);
+                    literal = (char *)newmem(sizeof(char), expr_len + 1);
                     literal_length = 0;
                }
           }
      }
-     free(literal);
+     delete(literal);
      bool error;
      log("MAIN EXPRESSION:\n");
      log_elements(elements);
@@ -202,7 +202,7 @@ char *eval_e(Calc calc, List(Element) * _elems, bool *error)
           return NULL;
 
      // argelements deep copied to elements
-     List(Element) *elements = list_create(Element)(element_free);
+     List(Element) *elements = list_create(Element)(element_delete);
      Element e;
      Foreach(Element, e, _elems)
      {
@@ -213,7 +213,7 @@ char *eval_e(Calc calc, List(Element) * _elems, bool *error)
      log("SUB-EXPRESSION:\n");
      log_elements(elements);
      // remove parentheses recursively
-     int *stack = calloc(sizeof(int), list_count(Element)(elements));
+     int *stack = newmem(sizeof(int), list_count(Element)(elements));
      int stackcnt = 0;
      int index = 0;
      int found_paren = 1;
@@ -241,7 +241,7 @@ char *eval_e(Calc calc, List(Element) * _elems, bool *error)
                     {
                          // copy the in-parentheses part of elements to inner_ele
                          // and pass inner_e lements to the next recursion
-                         List(Element) *inner_elements = list_create(Element)(element_free);
+                         List(Element) *inner_elements = list_create(Element)(element_delete);
 
                          index = -1;
                          Element e1;
@@ -263,7 +263,7 @@ char *eval_e(Calc calc, List(Element) * _elems, bool *error)
                          {
                               *error = true;
                               list_delete(Element)(elements);
-                              free(stack);
+                              delete(stack);
                               return NULL;
                          }
 
@@ -282,7 +282,7 @@ char *eval_e(Calc calc, List(Element) * _elems, bool *error)
                     else if (stackcnt < 0)
                     {
                          warn("Unpaired parentheses.\n");
-                         free(stack);
+                         delete(stack);
                          list_delete(Element)(elements);
                          *error = true;
                          return NULL;
@@ -293,13 +293,13 @@ char *eval_e(Calc calc, List(Element) * _elems, bool *error)
           if (stackcnt != 0)
           {
                warn("Unpaired parentheses.\n");
-               free(stack);
+               delete(stack);
                list_delete(Element)(elements);
                *error = true;
                return NULL;
           }
      }
-     free(stack);
+     delete(stack);
      // reduce all functions and constants
 
      bool replace_done = true;

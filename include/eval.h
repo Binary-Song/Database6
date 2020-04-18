@@ -1,5 +1,6 @@
 ﻿#ifndef EVAL_H
 #define EVAL_H
+#include "memcheck.h"
 #include "basic_linked_lists.h"
 #include "stdbool.h"
 typedef struct Op

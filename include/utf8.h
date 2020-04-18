@@ -1,5 +1,6 @@
 #ifndef UTF8_H
 #define UTF8_H
+#include "memcheck.h"
 #include "basic_linked_lists.h"
 #include "stdbool.h"
 int byte_count(const char * );

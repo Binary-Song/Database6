@@ -4,7 +4,7 @@
 
 /*---------------- DECLARATION OF STRUCTS AND FUNCTIONS, PUT THEM IN HEADERS ----------------*/
 
-
+#include "memcheck.h"
 
 #define DECLARE_LIST(T)\
 \
@@ -57,8 +57,8 @@ void list_set##T(List##T *list, int index, T newvalue);\
 \
 List##T *list_create##T(void (*dealloc)(T))\
 {\
-    List##T *list = calloc(sizeof(List##T), 1);\
-    list->head = calloc(sizeof(ListNode##T), 1);\
+    List##T *list = newmem(sizeof(List##T), 1);\
+    list->head = newmem(sizeof(ListNode##T), 1);\
     list->dealloc = dealloc;\
     list->count = 0;\
     return list;\
@@ -76,7 +76,7 @@ ListNode##T *list_append##T(List##T *list, T data)\
     {\
         node = node->next;\
     }\
-    node->next = calloc(sizeof(ListNode##T), 1);\
+    node->next = newmem(sizeof(ListNode##T), 1);\
     node->next->prev = node;\
     node->next->data = data;\
     list->count++;\
@@ -114,10 +114,10 @@ void list_delete##T(List##T *list)\
         {\
             list->dealloc(curr->data);\
         }\
-        free(curr);\
+        delete(curr);\
         curr = next;\
     }\
-    free(list);\
+    delete(list);\
 }\
 \
 void list_remove##T(List##T *list, int index, int count)\
@@ -156,7 +156,7 @@ void list_remove##T(List##T *list, int index, int count)\
                 {\
                     list->dealloc(node->data);\
                 }\
-                free(node);\
+                delete(node);\
                 node = next;\
                 --count;\
                 list->count--;\
@@ -198,7 +198,7 @@ ListNode##T *list_insert##T(List##T *list, int index, T data)\
 \
         if (i == index)\
         {\
-            ListNode##T *new_node = malloc(sizeof(ListNode##T));\
+            ListNode##T *new_node = newmem(1,sizeof(ListNode##T));\
             new_node->data = data;\
 \
             ListNode##T *prev = node->prev;\
@@ -217,7 +217,7 @@ ListNode##T *list_insert##T(List##T *list, int index, T data)\
     }\
     if (i == index - 1)\
     {\
-        ListNode##T *new_node = malloc(sizeof(ListNode##T));\
+        ListNode##T *new_node = newmem(1,sizeof(ListNode##T));\
         new_node->data = data;\
 \
         new_node->next = NULL;\
