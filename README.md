@@ -70,7 +70,7 @@ add-field name "得分" constr "value>=0&&value<=100" format "value+\"分\""
 更新字段
 ------------
 用update-field指令更新字段的属性。语法如下：
-> update-field <name *字段名*> [set-name *新字段名*] [set-constr *新约束*|disable-constr] [set-format *新格式*|disable-format] [set-info *新提示信息*|disable-info] [set-unique *新唯一性*|disable-unique]
+> update-field <name *字段名*> [set-name *新字段名*] [set-constr *新约束* | disable-constr] [set-format *新格式* | disable-format] [set-info *新提示信息* | disable-info] [set-unique *新唯一性* | disable-unique]
 
 （`|`表示二选一）
 
