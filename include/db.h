@@ -7,6 +7,8 @@
 #include "stdlib.h"
 #include "basic_linked_lists.h"
 
+void db_list_record(const char *filter, const char *sort,bool raw);
+
 void db_init();
 
 void db_deinit();
@@ -43,6 +45,5 @@ void db_update_record(int record_index, const_string field_name, const_string ne
 void db_list_all_records();
 
 void db_update_record(int record_index, const_string field_name, const_string new_value);
-
 
 #endif

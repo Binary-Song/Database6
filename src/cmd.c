@@ -40,7 +40,7 @@ void cmd_add_field(List(Pair) * pairs, List(Tag) * tags)
         }
         else
         {
-            warn("Unknown keyword.\n");
+            warn("Unknown keyword:%s\n", NS_LOG(pair.value));
             return;
         }
     }
@@ -61,7 +61,7 @@ void cmd_add_field(List(Pair) * pairs, List(Tag) * tags)
             ;
         else
         {
-            warn("Unknown tag.\n");
+            warn("Unknown keyword:%s\n", NS_LOG(pair.value));
             return;
         }
     }
@@ -75,7 +75,43 @@ void cmd_list_fields(List(Pair) * pairs, List(Tag) * tags)
 
 void cmd_list_records(List(Pair) * pairs, List(Tag) * tags)
 {
-    db_list_all_records();
+    string filter = NULL;
+    string sort = NULL;
+
+    Pair pair;
+    Foreach(Pair, pair, pairs)
+    {
+        if (!strcmp(pair.key, "filter"))
+        {
+            filter = pair.value;
+        }
+        else if (!strcmp(pair.key, "sort"))
+        {
+            sort = pair.value;
+        }
+        else
+        {
+            warn("Unknown keyword:%s\n", NS_LOG(pair.value));
+            return;
+        }
+    }
+
+    bool raw = false;
+    Tag tag;
+    Foreach(Tag, tag, tags)
+    {
+        if (!strcmp(tag.value, "raw"))
+        {
+            raw = true;
+        }
+        else
+        {
+
+            warn("Unknown keyword:%s\n", NS_LOG(tag.value));
+            return;
+        }
+    }
+    db_list_record(filter, sort, raw);
 }
 
 void cmd_remove_record(List(Pair) * pairs, List(Tag) * tags)
@@ -91,7 +127,7 @@ void cmd_remove_record(List(Pair) * pairs, List(Tag) * tags)
         }
         else
         {
-            warn("Unknown tag:%s\n", tag.value);
+            warn("Unknown keyword:%s\n", NS_LOG(tag.value));
             return;
         }
     }
@@ -174,6 +210,11 @@ void cmd_configure_field(List(Pair) * pairs, List(Tag) * tags)
             setunique = true;
             unique = NULL;
         }
+        else
+        {
+            warn("Unknown keyword:%s\n", NS_LOG(tag.value));
+            return;
+        }
     }
 
     Pair pair;
@@ -183,7 +224,7 @@ void cmd_configure_field(List(Pair) * pairs, List(Tag) * tags)
         {
             fieldname = pair.value;
         }
-        if (!strcmp(pair.key, "set-constr"))
+        else if (!strcmp(pair.key, "set-constr"))
         {
             if (!setconstr)
             {
@@ -196,7 +237,7 @@ void cmd_configure_field(List(Pair) * pairs, List(Tag) * tags)
                 return;
             }
         }
-        if (!strcmp(pair.key, "set-format"))
+        else if (!strcmp(pair.key, "set-format"))
         {
             if (!setformat)
             {
@@ -209,7 +250,7 @@ void cmd_configure_field(List(Pair) * pairs, List(Tag) * tags)
                 return;
             }
         }
-        if (!strcmp(pair.key, "set-info"))
+        else if (!strcmp(pair.key, "set-info"))
         {
             if (!setinfo)
             {
@@ -222,7 +263,7 @@ void cmd_configure_field(List(Pair) * pairs, List(Tag) * tags)
                 return;
             }
         }
-        if (!strcmp(pair.key, "set-unique"))
+        else if (!strcmp(pair.key, "set-unique"))
         {
             if (!setunique)
             {
@@ -241,18 +282,23 @@ void cmd_configure_field(List(Pair) * pairs, List(Tag) * tags)
                 return;
             }
         }
-        if (!strcmp(pair.key, "set-name"))
+        else if (!strcmp(pair.key, "set-name"))
         {
             name = pair.value;
             setname = true;
         }
+        else
+        {
+            warn("Unknown keyword:%s\n", NS_LOG(pair.value));
+            return;
+        }
     }
 
-    if (!fieldname   )
+    if (!fieldname)
     {
         warn("Target field not provided.\n");
         return;
     }
 
-    db_config_field(fieldname,setname,name,setconstr,constr,setformat,format,setinfo,info,setunique,unique);
+    db_config_field(fieldname, setname, name, setconstr, constr, setformat, format, setinfo, info, setunique, unique);
 }

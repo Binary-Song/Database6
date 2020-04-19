@@ -1,5 +1,5 @@
 #define DOMAIN CMDANLS
-#define DISABLE_LOG
+//#define DISABLE_LOG
 #include "cmd_analysis.h"
 #include "basic_linked_lists.h"
 #include "string.h"
@@ -31,6 +31,8 @@ string dict_key[] = {
     "set-format", //
     "set-info",   //
     "set-unique", //
+    "filter",     //
+    "sort",       //
 };
 string dict_tag[] = {
     "unique",         //
@@ -38,7 +40,8 @@ string dict_tag[] = {
     "disable-format", //
     "disable-info",   //
     "disable-constr", //
-    "really"          //
+    "really",         //
+    "raw",            //
 };
 
 typedef void (*CMDFunc_Pair)(List(Pair) *, List(Tag) *);
@@ -97,235 +100,11 @@ typedef struct _Token
 
 void token_dealloc(Token tok)
 {
-    delete(tok.content);
+    delete (tok.content);
 }
 
 DECLARE_LIST(Token)
-ListToken *list_createToken(void (*dealloc)(Token))
-{
-    ListToken *list = newmem(sizeof(ListToken), 1);
-    list->head = newmem(sizeof(ListNodeToken), 1);
-    list->dealloc = dealloc;
-    list->count = 0;
-    return list;
-}
-ListNodeToken *list_appendToken(ListToken *list, Token data)
-{
-    if (!list || !list->head)
-    {
-        fprintf(stderr, "[ERROR](LIST): Unexpected null pointer.\n");
-        exit(EXIT_FAILURE);
-    }
-    ListNodeToken *node = list->head;
-    while (node->next)
-    {
-        node = node->next;
-    }
-    node->next = newmem(sizeof(ListNodeToken), 1);
-    node->next->prev = node;
-    node->next->data = data;
-    list->count++;
-    return node->next;
-}
-void list_foreachToken(ListToken *list, void (*func)(Token))
-{
-    if (!list || !list->head)
-    {
-        fprintf(stderr, "[ERROR](LIST): Unexpected null pointer.\n");
-        exit(EXIT_FAILURE);
-    }
-    ListNodeToken *node = list->head;
-    while (node->next)
-    {
-        node = node->next;
-        func(node->data);
-    }
-}
-void list_deleteToken(ListToken *list)
-{
-    if (!list || !list->head)
-    {
-        fprintf(stderr, "[ERROR](LIST): Unexpected null pointer.\n");
-        exit(EXIT_FAILURE);
-    }
-    ListNodeToken *curr = list->head->next;
-    ListNodeToken *next;
-    while (curr)
-    {
-        next = curr->next;
-        if (list->dealloc)
-        {
-            list->dealloc(curr->data);
-        }
-        delete(curr);
-        curr = next;
-    }
-    delete(list);
-}
-void list_removeToken(ListToken *list, int index, int count)
-{
-    if (!list || !list->head)
-    {
-        fprintf(stderr, "[ERROR](LIST): Unexpected null pointer.\n");
-        exit(EXIT_FAILURE);
-    }
-    if (index < 0)
-    {
-        fprintf(stderr, "[ERROR](LIST): Invalid index.\n");
-        exit(EXIT_FAILURE);
-    }
-    if (count < 0)
-    {
-        fprintf(stderr, "[ERROR](LIST): Invalid count.\n");
-        exit(EXIT_FAILURE);
-    }
-    ListNodeToken *node_before_range = NULL;
-    ListNodeToken *node = list->head;
-    int i = -1;
-    while (node->next)
-    {
-        node = node->next;
-        ++i;
-        if (index == i)
-        {
-            node_before_range = node->prev;
-            while (count && node)
-            {
-                ListNodeToken *next = node->next;
-                if (list->dealloc)
-                {
-                    list->dealloc(node->data);
-                }
-                delete(node);
-                node = next;
-                --count;
-                list->count--;
-            }
-            if (count && !node)
-            {
-                fprintf(stderr, "[ERROR](LIST): Out of range.\n");
-                exit(EXIT_FAILURE);
-            }
-            node_before_range->next = node;
-            if (node)
-            {
-                node->prev = node_before_range;
-            }
-            return;
-        }
-    }
-}
-ListNodeToken *list_insertToken(ListToken *list, int index, Token data)
-{
-    if (!list || !list->head)
-    {
-        fprintf(stderr, "[ERROR](LIST): Unexpected null pointer.\n");
-        exit(EXIT_FAILURE);
-    }
-    if (index < 0)
-    {
-        fprintf(stderr, "[ERROR](LIST): Invalid index.\n");
-        exit(EXIT_FAILURE);
-    }
-    int i = -1;
-    ListNodeToken *node = list->head;
-    while (node->next)
-    {
-        node = node->next;
-        ++i;
-        if (i == index)
-        {
-            ListNodeToken *new_node = newmem(1, sizeof(ListNodeToken));
-            new_node->data = data;
-            ListNodeToken *prev = node->prev;
-            ListNodeToken *mid = new_node;
-            ListNodeToken *next = node;
-            mid->prev = prev;
-            mid->next = next;
-            prev->next = mid;
-            next->prev = mid;
-            list->count++;
-            return new_node;
-        }
-    }
-    if (i == index - 1)
-    {
-        ListNodeToken *new_node = newmem(1, sizeof(ListNodeToken));
-        new_node->data = data;
-        new_node->next = NULL;
-        new_node->prev = node;
-        node->next = new_node;
-        list->count++;
-        return new_node;
-    }
-    fprintf(stderr, "[ERROR](LIST): Out of range.\n");
-    exit(EXIT_FAILURE);
-}
-int list_countToken(ListToken *list) { return list->count; }
-Token list_get_from_node_pointerToken(ListNodeToken *pointer) { return pointer->data; }
-Token list_getToken(ListToken *list, int index)
-{
-    if (index < 0)
-    {
-        fprintf(stderr, "[ERROR](LIST): Out of range.\n");
-        exit(EXIT_FAILURE);
-    }
-    ListNodeToken *node = list->head;
-    int i = -1;
-    while (node->next)
-    {
-        node = node->next;
-        i++;
-        if (i == index)
-        {
-            return node->data;
-        }
-    }
-    fprintf(stderr, "[ERROR](LIST): Out of range.\n");
-    exit(EXIT_FAILURE);
-}
-ListNodeToken *list_get_node_pointerToken(ListToken *list, int index)
-{
-    if (!list || !list->head)
-    {
-        fprintf(stderr, "[ERROR](LIST): Unexpected null pointer.\n");
-        exit(EXIT_FAILURE);
-    }
-    if (index < 0)
-    {
-        fprintf(stderr, "[ERROR](LIST): Invalid index.\n");
-        exit(EXIT_FAILURE);
-    }
-    ListNodeToken *node = list->head;
-    int i = -1;
-    while (node->next)
-    {
-        node = node->next;
-        i++;
-        if (i == index)
-        {
-            return node;
-        }
-    }
-    fprintf(stderr, "[ERROR](LIST): Out of range.\n");
-    exit(EXIT_FAILURE);
-}
-void list_setToken(ListToken *list, int index, Token newvalue)
-{
-    ListNodeToken *node = list->head;
-    int i = -1;
-    while (node->next)
-    {
-        node = node->next;
-        i++;
-        if (list->dealloc && i == index)
-        {
-            list->dealloc(node->data);
-            node->data = newvalue;
-            return;
-        }
-    }
-}
+DEFINE_LIST(Token)
 
 List(Token) * Scan(const char *cmd);
 
@@ -337,6 +116,7 @@ typedef enum _chartype
     CTYPE_BACHSLASH = 3,
     CTYPE_NUMBER = 4,
     CTYPE_END = 5,
+    CTYPE_HYPHEN = 6,
 } CharType;
 
 CharType getchartype(char c)
@@ -357,9 +137,13 @@ CharType getchartype(char c)
     {
         return CTYPE_BACHSLASH;
     }
-    if (c >= '0' && c <= '9')
+    if (c >= '0' && c <= '9' || c == '.')
     {
         return CTYPE_NUMBER;
+    }
+    if (c == '-')
+    {
+        return CTYPE_HYPHEN;
     }
 
     return CTYPE_ALPHA;
@@ -428,17 +212,17 @@ List(Token) * Scan(const char *cmd)
 {
     log("Scanning...\n");
     ListToken *tokens = list_create(Token)(token_dealloc);
-    int table[][6] = {
+    int table[][7] = {
         //-1 = error
-        //A  S  Q  B  N  E (alpha,space,quote,backslash,number,end)
-        {1, 2, 4, 1, 7, 2},     //0
-        {1, 3, 4, 1, 1, 3},     //1
-        {0, 0, 0, 0, 0, 0},     //2
-        {0, 0, 0, 0, 0, 0},     //3
-        {4, 4, 5, 6, 4, -3},    //4
-        {0, 0, 0, 0, 0, 0},     //5
-        {-1, -1, 4, 4, -1, -3}, //6
-        {-2, 8, -2, -2, 7, 8},  //7
+        //A  S  Q  B  N  E  H (alpha,space,quote,backslash,number,end,hyphen)
+        {1, 2, 4, 1, 7, 2, 7},      //0
+        {1, 3, 4, 1, 1, 3, 1},      //1
+        {0, 0, 0, 0, 0, 0, 0},      //2
+        {0, 0, 0, 0, 0, 0, 0},      //3
+        {4, 4, 5, 6, 4, -3, 4},     //4
+        {0, 0, 0, 0, 0, 0, 0},      //5
+        {-1, -1, 4, 4, -1, -3, -1}, //6
+        {-2, 8, -2, -2, 7, 8, -2},  //7
     };
     int state = 0;
     const char *current = cmd; //导致转变的字符位置
@@ -470,7 +254,7 @@ List(Token) * Scan(const char *cmd)
             start = current + 1;
             state = 0;
             break;
-        case 5: //引号结束 
+        case 5: //引号结束
             newword = newmem(1, current - start);
             strncpy(newword, start + 1, current - start - 1);
             tok.content = newword;
@@ -598,7 +382,82 @@ typedef struct _Symbol
 } Symbol;
 
 DECALRE_STACK(Symbol)
-DEFINE_STACK(Symbol)
+
+//DEFINE_STACK(Symbol)
+#pragma region
+
+StackSymbol *stack_createSymbol(void (*dealloc)(Symbol), Symbol (*copy)(Symbol))
+{
+    StackSymbol *stack = newmem(sizeof(StackSymbol), 1);
+    stack->count = 0;
+    stack->dealloc = dealloc;
+    stack->copy = copy;
+    stack->top = NULL;
+    return stack;
+}
+StackNodeSymbol *stack_pushSymbol(StackSymbol *stack, Symbol data)
+{
+    if (!stack)
+    {
+        fprintf(stderr, "[ERROR](STACK): Unexpected null pointer.\n");
+        exit(1);
+    }
+    StackNodeSymbol *node = newmem(sizeof(StackNodeSymbol), 1);
+    node->data = data;
+    node->inner = stack->top;
+    stack->count++;
+    stack->top = node;
+    return node;
+}
+void stack_deleteSymbol(StackSymbol *stack)
+{
+    if (!stack)
+    {
+        fprintf(stderr, "[ERROR](STACK): Unexpected null pointer.\n");
+        exit(1);
+    }
+    StackNodeSymbol *curr = stack->top;
+    StackNodeSymbol *inner;
+    while (curr)
+    {
+        inner = curr->inner;
+        if (stack->dealloc)
+        {
+            stack->dealloc(curr->data);
+        }
+        delete (curr);
+        curr = inner;
+    }
+    delete (stack);
+}
+Symbol stack_popSymbol(StackSymbol *stack)
+{
+    if (!stack || !stack->top)
+    {
+        fprintf(stderr, "[ERROR](LIST): Unexpected null pointer.\n");
+        exit(1);
+    }
+    Symbol t = stack->copy(stack->top->data);
+    stack->dealloc(stack->top->data);
+    StackNodeSymbol *newtop = stack->top->inner;
+    delete (stack->top);
+    stack->top = newtop;
+    stack->count--;
+    return t;
+}
+Symbol stack_peekSymbol(StackSymbol *stack, int layer)
+{
+    StackNodeSymbol *node = stack->top;
+    while (layer)
+    {
+        layer--;
+        node = node->inner;
+    }
+    return node->data;
+}
+int stack_countSymbol(StackSymbol *stack) { return stack->count; }
+
+#pragma endregion
 
 void log_symbol_stack(Stack(Symbol) * symstac)
 {
@@ -710,8 +569,8 @@ Pair Pair_init(string key, string value)
 
 void Pair_dealloc(Pair pair)
 {
-    delete(pair.key);
-    delete(pair.value);
+    delete (pair.key);
+    delete (pair.value);
 }
 
 Tag Tag_init(string tag)
@@ -723,7 +582,7 @@ Tag Tag_init(string tag)
 
 void Tag_dealloc(Tag tag)
 {
-    delete(tag.value);
+    delete (tag.value);
 }
 
 typedef struct _ParseResult

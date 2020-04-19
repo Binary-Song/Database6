@@ -17,6 +17,7 @@
 #define C_KEY "\e[032m"
 #define C_NULL "\e[031m"
 #define C_MSG "\e[032m"
+#define C_RAW "\e[035m"
 
 #ifdef LOG_TO_FILE
 

@@ -188,10 +188,10 @@ bool _check_constraint(int field_index, int record_index)
         if (!eval_result || !strcmp(eval_result, "0"))
         {
             deinit_calc(calc);
-            delete(expr);
+            delete (expr);
             return false;
         }
-        delete(expr);
+        delete (expr);
         deinit_calc(calc);
         return true;
     }
@@ -530,8 +530,13 @@ size_t db_record_count()
     return list_count(Record)(RECORDS);
 }
 
-string format_record(string input, string format)
+string format_record(const_string input, const_string format)
 {
+    if (!format)
+    {
+        return string_duplicate(input);
+    }
+
     Calc c = init_std_calc();
 
     Var v;
@@ -686,7 +691,7 @@ void db_list_all_records()
         fixed_print(f.name, 10, false);
         SET_COLOR(C_RESET);
         printf(" ");
-    }  
+    }
     printf("\n");
     Record r;
     Foreach(Record, r, RECORDS)
@@ -722,34 +727,194 @@ char *func_value(const char *a)
     return NULL;
 }
 
-void db_list_record(const char *filter, const char *sort)
+List(int) * filter_record(const char *filter)
 {
-    // List(int) *indices = list_create(int)(NULL);
+    List(int) *ls = list_create(int)(NULL);
 
-    // Calc calc = init_std_calc();
-    // Func func;
-    // func.name = "value";
-    // func.func = func_value;
-    // list_append(Func)(calc.functions, func);
-    // char *expr = newmem(strlen(filter) + 11, 1);
-    // sprintf(expr, "(%s)!=0", filter);
+    Calc calc = init_std_calc();
 
-    // Record r;
-    // record_index_context = 0;
-    // Foreach(Record, r, RECORDS)
-    // {
-    //     record_index_context++;
-    //     char *res = eval(calc, expr);
-    //     if (strcmp(res, "0")) //结果不为0,就认可
-    //     {
-    //         list_append(int)(indices, record_index_context);
-    //     }
-    //     delete(res);
-    // }
+    //添加新的函数，value(a) 给定字符串a返回字段a的值，记录由record_index_context决定
+    Func func;
+    func.name = "value";
+    func.func = func_value;
 
-    // list_delete(int)(indices);
-    // delete(expr);
-    // deinit_calc(calc);
+    list_append(Func)(calc.functions, func);
+
+    //不等号的返回值是0或1，不可能有类似0.000的情况。不必担心格式问题
+    char *expr = new (strlen(filter) + 10);
+    sprintf(expr, "(%s)!=0", filter);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+    Record r;
+#pragma GCC diagnostic pop
+
+    record_index_context = -1;
+    Foreach(Record, r, RECORDS)
+    {
+        record_index_context++;
+        char *res = eval(calc, expr);
+        if (res && strcmp(res, "0")) //接受
+        {
+            list_append(int)(ls, record_index_context);
+        }
+        delete (res);
+    }
+    delete (expr);
+    deinit_calc(calc);
+    return ls;
+}
+
+static List(int) * array_to_list(int *arr, int n)
+{
+    List(int) *ls = list_create(int)(NULL);
+    for (size_t i = 0; i < n; i++)
+    {
+        list_append(int)(ls, arr[i]);
+    }
+    return ls;
+}
+
+static int sort_context_a;
+static int sort_context_b;
+static string sort_expr;
+static Calc sort_calc;
+int _base_sort(const void *pa, const void *pb)
+{
+    sort_context_a = *((int *)pa);
+    sort_context_b = *((int *)pb);
+
+    char *e = eval(sort_calc, sort_expr);
+    int r = 0;
+    if (!e || !strcmp(e, "0"))
+        r = -1;
+    else
+        r = 1;
+
+    delete (e);
+    return r;
+}
+char *func_valuea(const char *a)
+{
+    if (!a || !strlen(a))
+        return NULL;
+    Field f;
+    int i = -1;
+    Foreach(Field, f, FIELDS)
+    {
+        i++;
+        if (!strcmp(f.name, a))
+        {
+            return string_duplicate(GET_VALUE(i, sort_context_a));
+        }
+    }
+    return NULL;
+}
+char *func_valueb(const char *a)
+{
+    if (!a || !strlen(a))
+        return NULL;
+    Field f;
+    int i = -1;
+    Foreach(Field, f, FIELDS)
+    {
+        i++;
+        if (!strcmp(f.name, a))
+        {
+            return string_duplicate(GET_VALUE(i, sort_context_b));
+        }
+    }
+    return NULL;
+}
+List(int) * sort_record(List(int) * rec_indices, const char *sort)
+{
+    sort_calc = init_std_calc();
+
+    //添加新的函数，valuea(a) value(b)
+    Func func;
+    func.name = "valuea";
+    func.func = func_valuea;
+    list_append(Func)(sort_calc.functions, func);
+
+    func.name = "valueb";
+    func.func = func_valueb;
+    list_append(Func)(sort_calc.functions, func);
+
+    char *expr = new (strlen(sort) + 10);
+    sprintf(expr, "(%s)>=0", sort);
+    sort_expr = expr;
+
+    int *array = new (sizeof(int) * (rec_indices->count));
+    int i = 0;
+    int rec_ind;
+    Foreach(int, rec_ind, rec_indices)
+    {
+        array[i] = rec_ind;
+        i++;
+    }
+    qsort(array, i, sizeof(int), _base_sort);
+
+    delete (expr);
+    sort_expr = NULL;
+    deinit_calc(sort_calc);
+
+    List(int) *ls = array_to_list(array, i);
+    delete (array);
+    return ls;
+}
+
+void db_list_record(const char *filter, const char *sort, bool raw)
+{
+    Field f;
+    Foreach(Field, f, FIELDS)
+    {
+        SET_COLOR(raw ? C_RAW : C_FIELD);
+        fixed_print(f.name, 10, false);
+        SET_COLOR(C_RESET);
+        printf(" ");
+    }
+    printf("\n");
+
+    //筛选符合条件的记录的index
+    if (!filter)
+    {
+        filter = "1";
+    }
+    
+    List(int) *indices = filter_record(filter);
+
+    if (sort)
+    {
+        List(int) *sorted = sort_record(indices, sort);
+        list_delete(int)(indices);
+        indices = sorted;
+    }
+
+    int ri;
+    Foreach(int, ri, indices)
+    {
+        int fi = -1;
+        Field f;
+        Foreach(Field, f, FIELDS)
+        {
+            fi++;
+            char *val;
+            if (!raw)
+            {
+                val = format_record(GET_VALUE(fi, ri), f.format);
+            }
+            else
+            {
+                val = string_duplicate(GET_VALUE(fi, ri));
+            }
+
+            fixed_print(val, 10, false);
+            printf(" ");
+            delete (val);
+        }
+        printf("\n");
+    }
+
+    list_delete(int)(indices);
 }
 #pragma endregion
 

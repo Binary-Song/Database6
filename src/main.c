@@ -31,7 +31,6 @@ int main()
 
     while (1)
     {
-        msg("Awaiting Command\n");
         printf(">");
         char *input = newmem(1, 500);
         fgets(input, 499, stdin);
@@ -40,7 +39,7 @@ int main()
             delete (input);
             break;
         }
-        log("INPUT COMMAND:%s\n", input);
+        logmsg("Executing command:%s", input);
         exec(input);
         delete (input);
     }

@@ -48,35 +48,64 @@ void memcheck_end()
 void *mnew(size_t size, char *file, int line)
 {
     char *p = calloc(size, 1);
-    
+
     tail->next = calloc(sizeof(node), 1);
     tail = tail->next;
 
     strncpy(tail->file, file, 39);
     tail->line = line;
     tail->id = next_memid;
-    next_memid++; 
-    tail->mem = p; 
+    next_memid++;
+    tail->mem = p;
+
+    // node *n = head->next;
+    // int i = 0;
+    // while (n)
+    // {
+    //     i++;
+    //     n = n->next;
+    // }
+    // printf("NewMemAlloc,MemCount=%d\n", i);
+
     return p;
 }
 
 void mdelete(void *p)
 {
-    if (!p) return;
+    if (!p)
+        return;
 
-    node *t = head; 
+    node *curr = head->next;
+    node *prev = head;
 
-    while (t)
+    while (curr)
     {
-        if (t->next && t->next->mem == p)
+        node *next = curr->next;
+        if (curr->mem == p)
         {
-            node *next_next = t->next->next;
             free(p);
-            free(t->next);
-            t->next = next_next;
+
+            if (!curr->next)//如果是尾部，就要重设尾部
+            {
+                tail = prev;
+            } 
+            free(curr);
+            prev->next = next;
+
+            // node *n = head->next;
+            // int i = 0;
+            // while (n)
+            // {
+            //     i++;
+            //      n = n->next;
+            // }
+            // printf("Memfree,MemCount=%d\n", i);
+
             return;
         }
-        t = t->next;
+        prev = curr;
+        curr = next;
     }
-    printf("that would have been a segfault.\n");
+    printf("That would have been a segfault. Double free or free something you didn't malloc.\n");
+    abort();
 }

@@ -18,7 +18,7 @@ const int type_none = -1;
 
 void element_delete(Element e)
 {
-     delete(e.literal);
+     delete (e.literal);
 }
 
 Element element_copy(Element src)
@@ -34,7 +34,7 @@ char opchars[] = "+-*/><=,|!%&";
 
 int get_type(char ch)
 {
-     if (ch >= '0' && ch <= '9' || ch == '.' || ch == '\"' || ch == '-')
+     if (ch >= '0' && ch <= '9' || ch == '.' || ch == '\"' )
           return type_value;
 
      if (ch == '(')
@@ -62,7 +62,7 @@ void log_elements(List(Element) * ls)
      Element e;
      Foreach(Element, e, ls)
      {
-          log("literal:%s type:%d kind:%d\n",  NS_LOG(e.literal), e.type, e.operator_kind);
+          log("literal:%s type:%d kind:%d\n", NS_LOG(e.literal), e.type, e.operator_kind);
      }
 }
 
@@ -187,11 +187,12 @@ char *eval(Calc calc, const char *expr)
                }
           }
      }
-     delete(literal);
+     delete (literal);
      bool error;
      log("MAIN EXPRESSION:\n");
      log_elements(elements);
      char *a = eval_e(calc, elements, &error);
+     log("MAIN EXPRESSION RESULT: %s\n",NS_LOG(a));
      list_delete(Element)(elements);
      return a;
 }
@@ -257,13 +258,15 @@ char *eval_e(Calc calc, List(Element) * _elems, bool *error)
                          }
                          bool has_error = false;
                          char *result = eval_e(calc, inner_elements, &has_error);
+                         log("SUB-EXPRESSION RESULT: %s\n", NS_LOG(result));
+
                          list_delete(Element)(inner_elements);
 
                          if (has_error)
                          {
                               *error = true;
                               list_delete(Element)(elements);
-                              delete(stack);
+                              delete (stack);
                               return NULL;
                          }
 
@@ -282,7 +285,7 @@ char *eval_e(Calc calc, List(Element) * _elems, bool *error)
                     else if (stackcnt < 0)
                     {
                          warn("Unpaired parentheses.\n");
-                         delete(stack);
+                         delete (stack);
                          list_delete(Element)(elements);
                          *error = true;
                          return NULL;
@@ -293,13 +296,13 @@ char *eval_e(Calc calc, List(Element) * _elems, bool *error)
           if (stackcnt != 0)
           {
                warn("Unpaired parentheses.\n");
-               delete(stack);
+               delete (stack);
                list_delete(Element)(elements);
                *error = true;
                return NULL;
           }
      }
-     delete(stack);
+     delete (stack);
      // reduce all functions and constants
 
      bool replace_done = true;
