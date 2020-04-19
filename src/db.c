@@ -524,6 +524,8 @@ void db_list_fields()
 #pragma endregion
 
 #pragma region RECORD CONTROLS 记录控制
+
+List(int) * filter_record(const char *filter);
 //取得记录数
 size_t db_record_count()
 {
@@ -532,7 +534,7 @@ size_t db_record_count()
 
 string format_record(const_string input, const_string format)
 {
-    if (!format)
+    if (!format||!strcmp(format,""))
     {
         return string_duplicate(input);
     }
@@ -634,16 +636,58 @@ void db_add_record(List(string) * values)
     return;
 }
 
-//删除记录
-void db_delete_record(int index)
+int rev_s(const void *a, const void *b)
 {
-    list_remove(Record)(RECORDS, index, 1);
+    return ((int *)b) - ((int *)a);
 }
 
-void db_update_record(int record_index, const_string field_name, const_string new_value)
+//删除记录
+void db_delete_record(const_string filter)
+{
+    if (!filter)
+    {
+        filter = "1";
+    }
+    List(int) *list = filter_record(filter);
+
+    int count = 0;
+    int *rev_sorted = new (sizeof(int) * list->count);
+
+    int i;
+    Foreach(int, i, list)
+    {
+        rev_sorted[count] = i;
+        count++;
+    }
+    qsort(rev_sorted, count, sizeof(int), rev_s);
+    list_delete(int)(list);
+
+    for (size_t i = 0; i < count; i++)
+    {
+        list_remove(Record)(RECORDS, rev_sorted[i], 1);
+    }
+
+    delete (rev_sorted);
+}
+
+void db_update_record(const_string filter, const_string field_name, const_string new_value)
 {
     Field fld;
     int fi = -1;
+    List(int) *rec = filter_record(filter);
+    int record_index;
+    if (rec->count > 0)
+    {
+        record_index = list_get(int)(rec, 0);
+    }
+    else
+    {
+        warn("Record not found\n");
+        list_delete(int)(rec);
+        return;
+    }
+    list_delete(int)(rec);
+
     //找到字段
     Foreach(Field, fld, FIELDS)
     {
@@ -679,32 +723,6 @@ void db_update_record(int record_index, const_string field_name, const_string ne
 
             return;
         }
-    }
-}
-
-void db_list_all_records()
-{
-    Field f;
-    Foreach(Field, f, FIELDS)
-    {
-        SET_COLOR(C_FIELD);
-        fixed_print(f.name, 10, false);
-        SET_COLOR(C_RESET);
-        printf(" ");
-    }
-    printf("\n");
-    Record r;
-    Foreach(Record, r, RECORDS)
-    {
-        string v;
-        Foreach(string, v, r.values)
-        {
-            SET_COLOR(C_RECORD);
-            fixed_print((v), 10, false); //fixed print 自己能处理null
-            SET_COLOR(C_RESET);
-            printf(" ");
-        }
-        printf("\n");
     }
 }
 
@@ -879,7 +897,7 @@ void db_list_record(const char *filter, const char *sort, bool raw)
     {
         filter = "1";
     }
-    
+
     List(int) *indices = filter_record(filter);
 
     if (sort)
@@ -916,6 +934,160 @@ void db_list_record(const char *filter, const char *sort, bool raw)
 
     list_delete(int)(indices);
 }
+extern char *this_file;
+void db_save_file(const char *fn)
+{
+    if (!fn)
+    {
+        warn("File name incorrect.\n");
+    }
+
+    char *file_name = string_duplicate(fn);
+
+    if (file_name[0] != '/')
+    {
+        char *last = strrchr(this_file, '/');
+        int diff = last - this_file;
+        char *whole_path = new (strlen(file_name) + strlen(this_file) + 1);
+        strncat(whole_path, this_file, diff + 1);
+        strcat(whole_path, file_name);
+        file_name = whole_path;
+    }
+
+    FILE *f = fopen(file_name, "w");
+    if (!f)
+    {
+        delete (file_name);
+        warn("Unable to open file %s.\n", file_name);
+        return;
+    }
+
+    fprintf(f, "[%d]", FIELDS->count);
+
+#define strlen(s) (s) ? strlen(s) : 0
+
+    Field field;
+    Foreach(Field, field, FIELDS)
+    {
+        int len = strlen(field.name);
+        fprintf(f, "[%d]", len);
+        fwrite(field.name, 1, len, f);
+
+        len = strlen(field.constraint);
+        fprintf(f, "[%d]", len);
+        fwrite(field.constraint, 1, len, f);
+
+        len = strlen(field.format);
+        fprintf(f, "[%d]", len);
+        fwrite(field.format, 1, len, f);
+
+        len = strlen(field.info);
+        fprintf(f, "[%d]", len);
+        fwrite(field.info, 1, len, f);
+
+        fprintf(f, "[%d]", field.unique);
+    }
+
+    fprintf(f, "[%d]", RECORDS->count);
+
+    Record record;
+    Foreach(Record, record, RECORDS)
+    {
+        string val;
+        Foreach(string, val, record.values)
+        {
+            int len = strlen(val);
+            fprintf(f, "[%d]", len);
+            fwrite(val, 1, len, f);
+        }
+    }
+    fclose(f);
+    delete (file_name);
+#undef strlen
+}
+
+void db_load_file(const char *fn)
+{
+    if (!fn)
+    {
+        warn("File name incorrect.\n");
+    }
+
+    char *file_name = string_duplicate(fn);
+
+    if (file_name[0] != '/')
+    {
+        char *last = strrchr(this_file, '/');
+        int diff = last - this_file;
+        char *whole_path = new (strlen(file_name) + strlen(this_file) + 1);
+        strncat(whole_path, this_file, diff + 1);
+        strcat(whole_path, file_name);
+        file_name = whole_path;
+    }
+
+    FILE *f = fopen(file_name, "r");
+    if (!f)
+    {
+        delete (file_name);
+        warn("Unable to open file %s.\n", file_name);
+        return;
+    }
+
+    list_remove(Field)(FIELDS, 0, FIELDS->count);
+    list_remove(Record)(RECORDS, 0, RECORDS->count);
+
+    int field_count = 0;
+    fscanf(f,"[%d]",&field_count); 
+
+    for (size_t i = 0; i < field_count; i++)
+    {
+        int len = 0; 
+        fscanf(f,"[%d]",&len); 
+        char *name = new (len + 1); 
+        fread(name, 1, len, f);
+
+        fscanf(f,"[%d]",&len); 
+        char *constr = new (len + 1);
+        fread( constr, 1, len, f);
+
+        fscanf(f,"[%d]",&len); 
+        char *format = new (len + 1);
+        fread( format, 1, len, f);
+
+        fscanf(f,"[%d]",&len); 
+        char *info = new (len + 1);
+        fread( info, 1, len, f);
+
+        int unique;
+        fscanf(f,"[%d]",&unique); 
+
+        list_append(Field)(FIELDS, _field_init(name, constr, format, info, unique));
+    }
+    int record_count = 0;
+    fscanf(f,"[%d]",&record_count); 
+    for (size_t i = 0; i < record_count; i++)
+    {
+        Record r;
+        r.values = list_create(string)(string_dealloc);
+
+        for (size_t j = 0; j < field_count; j++)
+        {
+            int len = 0;
+            fscanf(f,"[%d]",&len); 
+            char *val = new (len + 1);
+            fread( val, 1, len, f);
+            list_append(string)(r.values, val);
+        }
+
+        list_append(Record)(RECORDS, r);
+    }
+    fclose(f);
+    delete (file_name);
+
+    List(Record)* recs = RECORDS;
+    printf("%p",recs);
+}
+
 #pragma endregion
 
 #pragma endregion

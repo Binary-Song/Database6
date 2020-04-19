@@ -4,6 +4,7 @@
 #include "stdlib.h"
 #undef log
 #include "math.h"
+#include "regex.h"
 #define ERROR 0.00001
 
 double to_double(const char *str, bool *success)
@@ -99,7 +100,23 @@ char *OP_div(const char *a, const char *b)
     snprintf(res, 19, "%.3lf", na / nb);
     return res;
 }
-
+char *OP_mod(const char *a, const char *b)
+{
+    if (!a || !b)
+    {
+        return NULL;
+    }
+    bool success = true;
+    double na = to_double(a, &success); //只有失败时才会改success的值
+    double nb = to_double(b, &success);
+    if (!success)
+    {
+        return NULL;
+    }
+    char *res = newmem(1, 20);
+    snprintf(res, 19, "%.3ld", ((long)na) % ((long)nb));
+    return res;
+}
 #pragma endregion
 
 #pragma region COMPARISON 比较
@@ -246,6 +263,12 @@ char *OP_not_equal(const char *a, const char *b)
         snprintf(res, 19, "0");
     return res;
 }
+char *OP_comma(const char *a, const char *b)
+{
+    char *res = new (strlen(a) + strlen(b) + 2);
+    sprintf(res, "%s\n%s", a, b);
+    return res;
+}
 #pragma endregion
 
 #pragma region STATISTICS 统计
@@ -280,6 +303,27 @@ char *FX_round(const char *a)
     }
     char *res = newmem(1, 20);
     snprintf(res, 19, "%.0lf", round(na));
+    return res;
+}
+
+char *FX_match(const char *a)
+{
+    char *res;
+    char *reg = new (strlen(a) + 1);
+    char *input = new (strlen(a) + 1);
+    sscanf(a, "%s\n%s", input, reg);
+    regex_t r;
+    regmatch_t match[1];
+    regcomp(&r, reg, REG_EXTENDED);
+    if (regexec(&r, input, 1, match, 0) != REG_NOMATCH)
+    {
+        res = string_duplicate("1");
+    }
+    else
+    {
+        res = string_duplicate("0");
+    }
+
     return res;
 }
 
@@ -368,6 +412,8 @@ List(Op) * GetLibOps()
     list_append(Op)(ops, initOp("&&", OP_and, 11, false));
     list_append(Op)(ops, initOp("||", OP_or, 12, false));
     list_append(Op)(ops, initOp("!", OP_not, 2, true));
+    list_append(Op)(ops, initOp(",", OP_comma, 15, false));
+    list_append(Op)(ops, initOp("%", OP_mod, 3, false));
     return ops;
 }
 
@@ -376,6 +422,7 @@ List(Func) * GetLibFuncs()
     List(Func) *funcs = list_create(Func)(NULL);
     list_append(Func)(funcs, initFunc("floor", FX_floor));
     list_append(Func)(funcs, initFunc("round", FX_round));
+    list_append(Func)(funcs, initFunc("match", FX_match));
     return funcs;
 }
 

@@ -10,9 +10,11 @@
 #include "time.h"
 #include "string.h"
 char *log_name;
-
-int main()
+char *this_file;
+int main(int argc, char *argv[])
 {
+    this_file = argv[0];
+    
     memcheck_begin();
 
     log_name = newmem(1, 50);
@@ -35,7 +37,7 @@ int main()
         char *input = newmem(1, 500);
         fgets(input, 499, stdin);
         if (!strcmp(input, "q\n"))
-        { 
+        {
             delete (input);
             break;
         }

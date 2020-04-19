@@ -19,6 +19,10 @@ string dict_cp[] = {
     "list-record",   //
     "remove-record", //
     "update-field",  //
+    "remove-field",//
+    "update-record",//
+    "save",
+    "load",
 };
 string dict_key[] = {
     "name",       //
@@ -33,14 +37,16 @@ string dict_key[] = {
     "set-unique", //
     "filter",     //
     "sort",       //
+    "value",    //
+    "field",
+    "file",
 };
 string dict_tag[] = {
     "unique",         //
     "disable-unique", //
     "disable-format", //
     "disable-info",   //
-    "disable-constr", //
-    "really",         //
+    "disable-constr", // 
     "raw",            //
 };
 
@@ -68,7 +74,11 @@ CMDInfo_Pair cmdinfobank_pair[] =
         {"list-field", cmd_list_fields},      //
         {"remove-record", cmd_remove_record}, //
         {"list-record", cmd_list_records},    //
-        {"update-field", cmd_configure_field} //
+        {"update-field", cmd_configure_field}, // 
+        {"remove-field", cmd_remove_field}, //
+        {"update-record",cmd_update_record},//
+        {"save",cmd_save},//
+        {"load",cmd_load}//
 };
 
 #pragma region SCANNER THINGS 词法分析相关
@@ -889,7 +899,7 @@ bool Parse(List(Token) * tokens, ParseResult *result)
                 else if (input0.token.word_type == WT_TAG) //下一个是tag
                 {
                     //P -> t P
-                    if (input1.token.word_type == WT_TAG) //下下个是tag
+                    if (input1.token.word_type == WT_TAG || input1.token.word_type == WT_KEY) //下下个是tag
                     {
                         stack_pop(Symbol)(pattstac);
                         stack_push(Symbol)(pattstac, symbol_init_nonterminal(ST_P));

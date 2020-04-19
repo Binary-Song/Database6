@@ -117,55 +117,17 @@ void cmd_list_records(List(Pair) * pairs, List(Tag) * tags)
 void cmd_remove_record(List(Pair) * pairs, List(Tag) * tags)
 {
     Pair pair;
-    Tag tag;
-    bool really = false;
-    Foreach(Tag, tag, tags)
-    {
-        if (!strcmp(tag.value, "really"))
-        {
-            really = true;
-        }
-        else
-        {
-            warn("Unknown keyword:%s\n", NS_LOG(tag.value));
-            return;
-        }
-    }
+    string filter = NULL;
+
     Foreach(Pair, pair, pairs)
     {
-        if (!strcmp(pair.key, "index"))
+        if (!strcmp(pair.key, "filter"))
         {
-            char *p;
-            long i = strtol(pair.value, &p, 10);
-            if (*p) //转换失败
-            {
-                warn("Need an integer after keyword \"index\"!\n");
-                return;
-            }
-            if (!really)
-            {
-                warn("Do you really want to delete this record?(y/n)\n");
-                char ans[5] = {};
-                fgets(ans, 4, stdin);
-                if (ans[0] == 'y' || ans[0] == 'Y')
-                {
-                    db_delete_record(i);
-                    logmsg("Record Deleted.\n");
-                }
-                else
-                {
-                    logmsg("Cancelled.\n");
-                }
-            }
-            else
-            {
-                db_delete_record(i);
-                logmsg("Record Deleted.\n");
-            }
-
-            return;
+            filter = pair.value;
+            break;
         }
     }
+    db_delete_record(filter);
 }
 
 void cmd_configure_field(List(Pair) * pairs, List(Tag) * tags)
@@ -301,4 +263,81 @@ void cmd_configure_field(List(Pair) * pairs, List(Tag) * tags)
     }
 
     db_config_field(fieldname, setname, name, setconstr, constr, setformat, format, setinfo, info, setunique, unique);
+}
+
+void cmd_remove_field(List(Pair) * pairs, List(Tag) * tags)
+{
+    Pair pair;
+    Foreach(Pair, pair, pairs)
+    {
+        if (!strcmp(pair.key, "name"))
+        {
+            db_delete_field(pair.value);
+        }
+    }
+}
+
+void cmd_update_record(List(Pair) * pairs, List(Tag) * tags)
+{
+    Pair pair;
+    string filter;
+    string field;
+    string value;
+    Foreach(Pair, pair, pairs)
+    {
+        if (!strcmp(pair.key, "filter"))
+        {
+            filter = pair.value;
+        }
+        else if (!strcmp(pair.key, "field"))
+        {
+            field = pair.value;
+        }
+        else if (!strcmp(pair.key, "value"))
+        {
+            value = pair.value;
+        }
+    }
+    if (!field)
+    {
+        warn("Field required!\n");
+        return;
+    }
+    if (!filter)
+    {
+        warn("Filter required!\n");
+        return;
+    }
+    if (!value)
+    {
+        warn("Value required!\n");
+        return;
+    }
+    db_update_record(filter, field, value);
+}
+ 
+void cmd_load(List(Pair) * pairs, List(Tag) * tags)
+{
+    Pair p;
+    Foreach(Pair, p, pairs)
+    {
+        if (!strcmp(p.key, "file"))
+        {
+            db_load_file(p.value);
+            return;
+        }
+    }
+}
+
+void cmd_save(List(Pair) * pairs, List(Tag) * tags)
+{
+    Pair p;
+    Foreach(Pair, p, pairs)
+    {
+        if (!strcmp(p.key, "file"))
+        {
+            db_save_file(p.value);
+            return;
+        }
+    }
 }
