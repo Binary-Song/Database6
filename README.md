@@ -47,6 +47,8 @@ add-record 0 1 "Hi"
 
 格式是数据显示时计算的表达式，计算的结果会替代数据原值被显示。格式为空时，数据原值会被显示。
 
+约束和格式表达式都可以通过`value`变量来取得记录的值。
+
 唯一性是一个布尔值（真或假,在指令中用`0`或`1`表示），唯一性为真的字段不接受重复的数据。字段中存在重复数据时也不能将字段唯一性修改为真。
 
 提示信息是对字段的注释，方便录入人员理解字段的含义和要求。
@@ -66,12 +68,12 @@ add-field name "得分" constr "value>=0&&value<=100" format "value+\"分\""
 
 列出字段
 ------------
-用list-field指令列出全部字段信息。语法如下：
+用`list-field`指令列出全部字段信息。语法如下：
 > list-field
 
 更新字段
 ------------
-用update-field指令更新字段的属性。语法如下：
+用`update-field`指令更新字段的属性。语法如下：
 > update-field <name *字段名*> [set-name *新字段名*] [set-constr *新约束* | disable-constr] [set-format *新格式* | disable-format] [set-info *新提示信息* | disable-info] [set-unique *新唯一性* | disable-unique]
 
 （`|`表示二选一）
@@ -86,4 +88,43 @@ update-field name "ID" set-name "学号" set-constr "match(value,\"[0-9]{8}\")" 
 
 删除字段
 ------------
+
+用`remove-field`指令来删除字段。语法如下：
+> remove-field name *字段名*
+
+记录
+------------
+记录是数据库的行。记录中的每个单元格都对应一列，即一个字段。
+
+添加记录
+------------
+用`add-record`指令来添加一条记录。
+> add-record *值1* *值2* ... *值n*
+
+每个值对应一个字段。如果n小于字段数，缺少的值会记作`null`，如果n大于字段数，多出的值会被忽略。
+
+修改记录
+------------
+用`update-record`指令来修改一条记录的某个字段。
+> update-record filter *筛选条件* field *字段名* value *新值*
+
+筛出第一个满足筛选条件条件的记录的指定字段将被赋予新值。在筛选条件表达式中，用value函数来取值：
+> value(*字段名*)
+
+
+例如：
+```
+update-record filter "value(\"ID\")==10" field "ID" value 11 
+```
+
+会将“ID”字段为10的记录的“ID”字段改为11。
+
+删除记录
+------------
+用`remove-record`指令来删除一条或多条记录。
+> remove-record filter *筛选条件*
+
+所有满足条件的记录会被删除。与`update-record`类似，在筛选条件表达式中，用value函数来取值：
+> value(*字段名*)
+
 
