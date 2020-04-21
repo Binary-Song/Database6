@@ -25,7 +25,6 @@ void cmd_configure_field(List(Pair) * pairs, List(Tag) * tags);
 void cmd_remove_field(List(Pair) * pairs, List(Tag) * tags);
 void cmd_update_record(List(Pair) * pairs, List(Tag) * tags);
 
-
 void cmd_save(List(Pair) * pairs, List(Tag) * tags);
-void cmd_load(List(Pair) * pairs, List(Tag) * tags);
+void cmd_load(List(Pair) * pairs, List(Tag) * tags); 
 #endif

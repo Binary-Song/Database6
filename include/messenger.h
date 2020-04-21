@@ -64,18 +64,20 @@ extern char *log_name;
     static inline void vlog##D(const char *format, va_list v) \
     {                                                         \
         FILE *fp = fopen(log_name, "a");                      \
+        if (fp)                                               \
+        {                                                     \
+            fprintf(fp, "[LOG](" #D "):");                    \
+            vfprintf(fp, format, v);                          \
                                                               \
-        fprintf(fp, "[LOG](" #D "):");                        \
-        vfprintf(fp, format, v);                              \
-                                                              \
-        fclose(fp);                                           \
+            fclose(fp);                                       \
+        }                                                     \
     }
 
 #else //enable log && log to stdout
 #define _DEFINE_LOG_FUNCS(D)                                                                           \
     static void log##D(const char *format, ...);                                                       \
     static void vlog##D(const char *format, va_list v);                                                \
-     static inline void log##D(const char *format, ...)                                               \
+    static inline void log##D(const char *format, ...)                                                 \
     {                                                                                                  \
         fprintf(stderr, "[" C_LOG "LOG" C_LOG_RESET "](" C_DOMAIN "" #D "" C_LOG_RESET "):" C_LOG ""); \
         va_list v;                                                                                     \

@@ -39,10 +39,14 @@ bool string_to_bool(string str, bool *success)
 
 extern char *this_file;
 string path_prefix(string full_path)
-{
-    string res = new (strlen(full_path)+1);
-    char *lastbs = strrchr(full_path, '/');
-    int copy_count = lastbs - full_path + 1;
-    strncpy(res,full_path,copy_count);
+{  
+    char *lastbs = strrchr(full_path, '/'); 
+    if (!lastbs)
+    {
+        return string_duplicate("/");
+    }
+    string res = new (strlen(full_path)+1); 
+    int copy_count = lastbs - full_path + 1; 
+    strncpy(res,full_path,copy_count); 
     return res;
 }

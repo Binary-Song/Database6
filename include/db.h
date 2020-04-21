@@ -7,7 +7,7 @@
 #include "stdlib.h"
 #include "basic_linked_lists.h"
 
-void db_list_record(const char *filter, const char *sort, bool raw);
+void db_list_record(const char *filter, const char *sort, bool raw,bool detailed);
 
 void db_init();
 
@@ -21,7 +21,7 @@ void db_change_active_table(const_string name);
 
 size_t db_field_count();
 
-void db_list_fields();
+void db_list_fields(bool detailed);
 
 void db_add_field(const_string name, const_string constraint, const_string format, const_string info, bool unique);
 

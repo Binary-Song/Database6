@@ -70,7 +70,21 @@ void cmd_add_field(List(Pair) * pairs, List(Tag) * tags)
 
 void cmd_list_fields(List(Pair) * pairs, List(Tag) * tags)
 {
-    db_list_fields();
+    bool detail = false;
+    Tag tag;
+    Foreach(Tag, tag, tags)
+    {
+        if (!strcmp(tag.value, "detailed"))
+        {
+            detail = true;
+        }
+        else
+        {
+            warn("Unknown keyword:%s\n", NS_LOG(tag.value));
+            return;
+        }
+    }
+    db_list_fields(detail);
 }
 
 void cmd_list_records(List(Pair) * pairs, List(Tag) * tags)
@@ -97,6 +111,7 @@ void cmd_list_records(List(Pair) * pairs, List(Tag) * tags)
     }
 
     bool raw = false;
+    bool detailed = false;
     Tag tag;
     Foreach(Tag, tag, tags)
     {
@@ -104,14 +119,17 @@ void cmd_list_records(List(Pair) * pairs, List(Tag) * tags)
         {
             raw = true;
         }
+        else if (!strcmp(tag.value, "detailed"))
+        {
+            detailed = true;
+        }
         else
         {
-
             warn("Unknown keyword:%s\n", NS_LOG(tag.value));
             return;
         }
     }
-    db_list_record(filter, sort, raw);
+    db_list_record(filter, sort, raw,detailed);
 }
 
 void cmd_remove_record(List(Pair) * pairs, List(Tag) * tags)
@@ -315,7 +333,7 @@ void cmd_update_record(List(Pair) * pairs, List(Tag) * tags)
     }
     db_update_record(filter, field, value);
 }
- 
+
 void cmd_load(List(Pair) * pairs, List(Tag) * tags)
 {
     Pair p;

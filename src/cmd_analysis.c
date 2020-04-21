@@ -48,6 +48,7 @@ string dict_tag[] = {
     "disable-info",   //
     "disable-constr", //
     "raw",            //
+    "detailed",
 };
 
 typedef void (*CMDFunc_Pair)(List(Pair) *, List(Tag) *);
@@ -78,7 +79,7 @@ CMDInfo_Pair cmdinfobank_pair[] =
         {"remove-field", cmd_remove_field},    //
         {"update-record", cmd_update_record},  //
         {"save", cmd_save},                    //
-        {"load", cmd_load}                     //
+        {"load", cmd_load},                    // 
 };
 
 #pragma region SCANNER THINGS 词法分析相关
@@ -220,7 +221,7 @@ bool isInArray(string str, string *arr, int length)
 //词法分析
 List(Token) * Scan(int argc, char *argv[])
 {
-    List(Token) * tokens = list_create(Token)(token_dealloc);
+    List(Token) *tokens = list_create(Token)(token_dealloc);
     Token newtk;
     for (size_t i = 1; i < argc; i++)
     {

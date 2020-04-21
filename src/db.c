@@ -171,7 +171,7 @@ bool _check_constraint(int field_index, int record_index)
 {
     Field field = GET_FIELD(field_index);
 
-    if (field.constraint)
+    if (field.constraint && strcmp(field.constraint, "")) //不为空
     {
         Var accessor;
         accessor.name = "value";
@@ -493,6 +493,10 @@ void db_config_field(const_string field_name,                      //
             warn("Unable to configure Field " C_FIELD "%s" C_WARNING ". "
                  "New constraint \"%s\" failed at record %d, value:\"%s\".\n",
                  NS_LOG(field_name), NS_LOG(new_constraint), check_res.index, NS_LOG(GET_VALUE(target_i, check_res.index)));
+            char *filter = new (200);
+            sprintf(filter, "value(\"%s\")=%s", NS_LOG(field_name), NS_LOG(GET_VALUE(target_i, check_res.index)));
+            db_list_record(filter, NULL, true, false);
+            delete (filter);
         }
         else if (check_res.reason == REASON_INFO_UNIQUE)
         {
@@ -505,7 +509,7 @@ void db_config_field(const_string field_name,                      //
     }
 }
 
-void db_list_fields()
+void db_list_fields(bool detailed)
 {
     Field field;
     printf("Field Total:%d\n", list_count(Field)(FIELDS));
@@ -513,12 +517,20 @@ void db_list_fields()
     Foreach(Field, field, FIELDS)
     {
         index++;
-        printf("----------Field:%d----------\n", index);
-        printf("Name:" C_FIELD "%s\n" C_RESET, NS(field.name));
-        printf("Info:" C_VALUE "%s\n" C_RESET, NS(field.info));
-        printf("Constraint:" C_VALUE "%s\n" C_RESET, NS(field.constraint));
-        printf("Format:" C_VALUE "%s\n" C_RESET, NS(field.format));
-        printf("Unique:" C_VALUE "%s\n" C_RESET, field.unique ? "true" : "false");
+        if (detailed)
+        {
+            printf("----------Field:%d----------\n", index);
+            printf("Name:" C_FIELD "%s\n" C_RESET, NS(field.name));
+            printf("Info:" C_VALUE "%s\n" C_RESET, NS(field.info));
+            printf("Constraint:" C_VALUE "%s\n" C_RESET, NS(field.constraint));
+            printf("Format:" C_VALUE "%s\n" C_RESET, NS(field.format));
+            printf("Unique:" C_VALUE "%s\n" C_RESET, field.unique ? "true" : "false");
+        }
+        else
+        {
+            printf(C_FIELD "%s  " C_RESET, NS(field.name));
+            printf(C_VALUE "%s\n" C_RESET, NS(field.info));
+        }
     }
 }
 #pragma endregion
@@ -534,7 +546,7 @@ size_t db_record_count()
 
 string format_record(const_string input, const_string format)
 {
-    if (!format||!strcmp(format,""))
+    if (!format || !strcmp(format, ""))
     {
         return string_duplicate(input);
     }
@@ -880,17 +892,9 @@ List(int) * sort_record(List(int) * rec_indices, const char *sort)
     return ls;
 }
 
-void db_list_record(const char *filter, const char *sort, bool raw)
+void db_list_record(const char *filter, const char *sort, bool raw, bool detailed)
 {
-    Field f;
-    Foreach(Field, f, FIELDS)
-    {
-        SET_COLOR(raw ? C_RAW : C_FIELD);
-        fixed_print(f.name, 10, false);
-        SET_COLOR(C_RESET);
-        printf(" ");
-    }
-    printf("\n");
+    printf("Record Totoal:%d, ", RECORDS->count);
 
     //筛选符合条件的记录的index
     if (!filter)
@@ -899,6 +903,20 @@ void db_list_record(const char *filter, const char *sort, bool raw)
     }
 
     List(int) *indices = filter_record(filter);
+    printf("Listed:%d\n", indices->count);
+    
+    Field f;
+    if (!detailed)
+    {
+        Foreach(Field, f, FIELDS)
+        {
+            SET_COLOR(raw ? C_RAW : C_FIELD);
+            fixed_print(f.name, 10, false);
+            SET_COLOR(C_RESET);
+            printf(" ");
+        }
+        printf("\n");
+    }
 
     if (sort)
     {
@@ -910,6 +928,11 @@ void db_list_record(const char *filter, const char *sort, bool raw)
     int ri;
     Foreach(int, ri, indices)
     {
+        if (detailed)
+        {
+            printf("----------Record:%d----------\n", ri);
+        }
+
         int fi = -1;
         Field f;
         Foreach(Field, f, FIELDS)
@@ -925,11 +948,23 @@ void db_list_record(const char *filter, const char *sort, bool raw)
                 val = string_duplicate(GET_VALUE(fi, ri));
             }
 
-            fixed_print(val, 10, false);
-            printf(" ");
+            if (detailed)
+            {
+                printf(C_FIELD "%s" C_RESET ":", f.name);
+                printf(C_RECORD "%s" C_RESET "\n", val);
+            }
+            else
+            {
+                fixed_print(val, 10, false);
+                printf(" ");
+            }
+
             delete (val);
         }
-        printf("\n");
+        if (!detailed)
+        {
+            printf("\n");
+        }
     }
 
     list_delete(int)(indices);
@@ -940,6 +975,7 @@ void db_save_file(const char *fn)
     if (!fn)
     {
         warn("File name incorrect.\n");
+        return;
     }
 
     char *file_name = string_duplicate(fn);
@@ -1037,34 +1073,34 @@ void db_load_file(const char *fn)
     list_remove(Record)(RECORDS, 0, RECORDS->count);
 
     int field_count = 0;
-    fscanf(f,"[%d]",&field_count); 
+    fscanf(f, "[%d]", &field_count);
 
     for (size_t i = 0; i < field_count; i++)
     {
-        int len = 0; 
-        fscanf(f,"[%d]",&len); 
-        char *name = new (len + 1); 
+        int len = 0;
+        fscanf(f, "[%d]", &len);
+        char *name = new (len + 1);
         fread(name, 1, len, f);
 
-        fscanf(f,"[%d]",&len); 
+        fscanf(f, "[%d]", &len);
         char *constr = new (len + 1);
-        fread( constr, 1, len, f);
+        fread(constr, 1, len, f);
 
-        fscanf(f,"[%d]",&len); 
+        fscanf(f, "[%d]", &len);
         char *format = new (len + 1);
-        fread( format, 1, len, f);
+        fread(format, 1, len, f);
 
-        fscanf(f,"[%d]",&len); 
+        fscanf(f, "[%d]", &len);
         char *info = new (len + 1);
-        fread( info, 1, len, f);
+        fread(info, 1, len, f);
 
         int unique;
-        fscanf(f,"[%d]",&unique); 
+        fscanf(f, "[%d]", &unique);
 
         list_append(Field)(FIELDS, _field_init(name, constr, format, info, unique));
     }
     int record_count = 0;
-    fscanf(f,"[%d]",&record_count); 
+    fscanf(f, "[%d]", &record_count);
     for (size_t i = 0; i < record_count; i++)
     {
         Record r;
@@ -1073,9 +1109,9 @@ void db_load_file(const char *fn)
         for (size_t j = 0; j < field_count; j++)
         {
             int len = 0;
-            fscanf(f,"[%d]",&len); 
+            fscanf(f, "[%d]", &len);
             char *val = new (len + 1);
-            fread( val, 1, len, f);
+            fread(val, 1, len, f);
             list_append(string)(r.values, val);
         }
 
@@ -1083,7 +1119,6 @@ void db_load_file(const char *fn)
     }
     fclose(f);
     delete (file_name);
- 
 }
 
 #pragma endregion

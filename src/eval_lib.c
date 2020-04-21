@@ -5,6 +5,7 @@
 #undef log
 #include "math.h"
 #include "regex.h"
+#include "utf8.h"
 #define ERROR 0.00001
 
 double to_double(const char *str, bool *success)
@@ -308,6 +309,10 @@ char *FX_round(const char *a)
 
 char *FX_match(const char *a)
 {
+    if (!a)
+    {
+        return NULL;
+    }
     char *res;
     char *reg = new (strlen(a) + 1);
     char *input = new (strlen(a) + 1);
@@ -324,6 +329,19 @@ char *FX_match(const char *a)
         res = string_duplicate("0");
     }
 
+    return res;
+}
+
+char *FX_strlen(const char *a)
+{
+    if (!a)
+    {
+        return NULL;
+    }
+    List(string) *strls = split(a);
+
+    char *res = new (10);
+    sprintf(res, "%d", strls->count);
     return res;
 }
 
@@ -423,6 +441,7 @@ List(Func) * GetLibFuncs()
     list_append(Func)(funcs, initFunc("floor", FX_floor));
     list_append(Func)(funcs, initFunc("round", FX_round));
     list_append(Func)(funcs, initFunc("match", FX_match));
+    list_append(Func)(funcs, initFunc("strlen", FX_strlen));
     return funcs;
 }
 
