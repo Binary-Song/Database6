@@ -4,5 +4,5 @@
 #include "str_utils.h"
 #include "basic_linked_lists.h"
 #include "cmd.h"
-void exec(const char *cmd);
+void exec(int argc, char *argv[]);
 #endif

@@ -12,7 +12,7 @@ string string_duplicate(const_string str)
 }
 void string_dealloc(string str)
 {
-    delete(str);
+    delete (str);
 }
 bool string_to_bool(string str, bool *success)
 {
@@ -35,4 +35,14 @@ bool string_to_bool(string str, bool *success)
         *success = false;
         return false;
     }
+}
+
+extern char *this_file;
+string path_prefix(string full_path)
+{
+    string res = new (strlen(full_path)+1);
+    char *lastbs = strrchr(full_path, '/');
+    int copy_count = lastbs - full_path + 1;
+    strncpy(res,full_path,copy_count);
+    return res;
 }

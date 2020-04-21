@@ -19,8 +19,8 @@ string dict_cp[] = {
     "list-record",   //
     "remove-record", //
     "update-field",  //
-    "remove-field",//
-    "update-record",//
+    "remove-field",  //
+    "update-record", //
     "save",
     "load",
 };
@@ -37,7 +37,7 @@ string dict_key[] = {
     "set-unique", //
     "filter",     //
     "sort",       //
-    "value",    //
+    "value",      //
     "field",
     "file",
 };
@@ -46,7 +46,7 @@ string dict_tag[] = {
     "disable-unique", //
     "disable-format", //
     "disable-info",   //
-    "disable-constr", // 
+    "disable-constr", //
     "raw",            //
 };
 
@@ -70,15 +70,15 @@ CMDInfo_ArgList cmdinfobank_arglist[] = {
 };
 CMDInfo_Pair cmdinfobank_pair[] =
     {
-        {"add-field", cmd_add_field},         //
-        {"list-field", cmd_list_fields},      //
-        {"remove-record", cmd_remove_record}, //
-        {"list-record", cmd_list_records},    //
-        {"update-field", cmd_configure_field}, // 
-        {"remove-field", cmd_remove_field}, //
-        {"update-record",cmd_update_record},//
-        {"save",cmd_save},//
-        {"load",cmd_load}//
+        {"add-field", cmd_add_field},          //
+        {"list-field", cmd_list_fields},       //
+        {"remove-record", cmd_remove_record},  //
+        {"list-record", cmd_list_records},     //
+        {"update-field", cmd_configure_field}, //
+        {"remove-field", cmd_remove_field},    //
+        {"update-record", cmd_update_record},  //
+        {"save", cmd_save},                    //
+        {"load", cmd_load}                     //
 };
 
 #pragma region SCANNER THINGS 词法分析相关
@@ -116,7 +116,7 @@ void token_dealloc(Token tok)
 DECLARE_LIST(Token)
 DEFINE_LIST(Token)
 
-List(Token) * Scan(const char *cmd);
+List(Token) * Scan(int argc, char *argv[]);
 
 typedef enum _chartype
 {
@@ -218,161 +218,40 @@ bool isInArray(string str, string *arr, int length)
 #pragma endregion
 
 //词法分析
-List(Token) * Scan(const char *cmd)
+List(Token) * Scan(int argc, char *argv[])
 {
-    log("Scanning...\n");
-    ListToken *tokens = list_create(Token)(token_dealloc);
-    int table[][7] = {
-        //-1 = error
-        //A  S  Q  B  N  E  H (alpha,space,quote,backslash,number,end,hyphen)
-        {1, 2, 4, 1, 7, 2, 7},      //0
-        {1, 3, 4, 1, 1, 3, 1},      //1
-        {0, 0, 0, 0, 0, 0, 0},      //2
-        {0, 0, 0, 0, 0, 0, 0},      //3
-        {4, 4, 5, 6, 4, -3, 4},     //4
-        {0, 0, 0, 0, 0, 0, 0},      //5
-        {-1, -1, 4, 4, -1, -3, -1}, //6
-        {-2, 8, -2, -2, 7, 8, -2},  //7
-    };
-    int state = 0;
-    const char *current = cmd; //导致转变的字符位置
-    const char *start = cmd;   //下一个单词开始的字符位置
-    char *newword;
-    Token tok;
-    bool pass = true;
-    while (pass)
+    List(Token) * tokens = list_create(Token)(token_dealloc);
+    Token newtk;
+    for (size_t i = 1; i < argc; i++)
     {
-        if (!(*current))
+        if (isInArray(argv[i], dict_cl, sizeof(dict_cl) / sizeof(string)))
         {
-            pass = false;
+            newtk.word_type = WT_CL;
+            newtk.content = string_duplicate(argv[i]);
         }
-
-        state = table[state][getchartype(*current)];
-        //log("state to %d,last char:%c\n", state, *current);
-        switch (state)
+        else if (isInArray(argv[i], dict_cp, sizeof(dict_cp) / sizeof(string)))
         {
-        case 2: //无用空格
-            start = current + 1;
-            state = 0;
-            break;
-        case 3: //单词尾空格
-            newword = newmem(1, current - start + 1);
-            strncpy(newword, start, current - start);
-            tok.content = newword;
-            tok.word_type = nWT_KEYWORD;
-            list_append(Token)(tokens, tok);
-            start = current + 1;
-            state = 0;
-            break;
-        case 5: //引号结束
-            newword = newmem(1, current - start);
-            strncpy(newword, start + 1, current - start - 1);
-            tok.content = newword;
-            tok.word_type = nWT_ARGSTR;
-            list_append(Token)(tokens, tok);
-            start = current + 1;
-            state = 0;
-            break;
-        case 8: //数字结束
-            newword = newmem(1, current - start + 1);
-            strncpy(newword, start, current - start);
-            tok.content = newword;
-            tok.word_type = nWT_INT;
-            list_append(Token)(tokens, tok);
-            start = current + 1;
-            state = 0;
-            break;
-        case -1: //错误(转义序列不识别)
-            warn("Unknown escape sequence.\n");
-            list_delete(Token)(tokens);
-            return NULL;
-        case -2: //错误(数字格式不识别)
-            warn("Unknown numeric format.\n");
-            list_delete(Token)(tokens);
-            return NULL;
-        case -3: //错误(引号不对称)
-            warn("Unmatched quotes.\n");
-            list_delete(Token)(tokens);
-            return NULL;
-        default:
-            break;
+            newtk.word_type = WT_CP;
+            newtk.content = string_duplicate(argv[i]);
         }
-        current++;
-    }
-
-    log("Raw Tokens listed below.\n");
-    log_tokens(tokens);
-    log("Post-Scan Processing...\n");
-
-    List(Token) *newtoks = list_create(Token)(token_dealloc);
-    Foreach(Token, tok, tokens)
-    {
-        //处理string参数中的转义字符
-        if (tok.word_type == nWT_ARGSTR)
+        else if (isInArray(argv[i], dict_key, sizeof(dict_key) / sizeof(string)))
         {
-            char *new_content = newmem(1, strlen(tok.content) + 1);
-            char *p = tok.content; //p用来遍历tok.content
-            char *q = new_content; //q用来遍历new_content
-            bool escaped = false;
-            while (*p)
-            {
-                if (*p != '\\' || escaped)
-                {
-                    *q = *p;
-                    q++;
-                    if (escaped)
-                        escaped = false;
-                }
-                else
-                {
-                    escaped = true;
-                }
-                ++p;
-            }
-            Token newtk;
-            newtk.content = new_content;
-            newtk.word_type = WT_ARG;
-            list_append(Token)(newtoks, newtk);
+            newtk.word_type = WT_KEY;
+            newtk.content = string_duplicate(argv[i]);
+        }
+        else if (isInArray(argv[i], dict_tag, sizeof(dict_tag) / sizeof(string)))
+        {
+            newtk.word_type = WT_TAG;
+            newtk.content = string_duplicate(argv[i]);
         }
         else
         {
-            Token newtk;
-            newtk.content = string_duplicate(tok.content);
-            if (tok.word_type == nWT_INT)
-            {
-                newtk.word_type = WT_ARG;
-            }
-            else if (isInArray(newtk.content, dict_cl, sizeof(dict_cl) / sizeof(string)))
-            {
-                newtk.word_type = WT_CL;
-            }
-            else if (isInArray(newtk.content, dict_cp, sizeof(dict_cp) / sizeof(string)))
-            {
-                newtk.word_type = WT_CP;
-            }
-            else if (isInArray(newtk.content, dict_key, sizeof(dict_key) / sizeof(string)))
-            {
-                newtk.word_type = WT_KEY;
-            }
-            else if (isInArray(newtk.content, dict_tag, sizeof(dict_tag) / sizeof(string)))
-            {
-                newtk.word_type = WT_TAG;
-            }
-            else
-            {
-                warn("Unknown keyword \"%s\".\n", NS_LOG(newtk.content));
-                return NULL;
-            }
-
-            list_append(Token)(newtoks, newtk);
+            newtk.word_type = WT_ARG;
+            newtk.content = string_duplicate(argv[i]);
         }
+        list_append(Token)(tokens, newtk);
     }
 
-    list_delete(Token)(tokens);
-    tokens = newtoks;
-
-    log("Scan complete! Tokens listed below.\n");
-    log_tokens(tokens);
     return tokens;
 }
 
@@ -953,9 +832,9 @@ bool Parse(List(Token) * tokens, ParseResult *result)
     return true;
 }
 
-void exec(const char *cmd)
+void exec(int argc, char *argv[])
 {
-    ListToken *tokens = Scan(cmd);
+    List(Token) *tokens = Scan(argc, argv);
     if (!tokens)
     {
         return;
@@ -978,4 +857,5 @@ void exec(const char *cmd)
             result.CommandInfo.cmdinfo_pair.func(result.Parameters.pairs, result.tags);
         }
     }
+    list_delete(Token)(tokens);
 }

@@ -1083,9 +1083,7 @@ void db_load_file(const char *fn)
     }
     fclose(f);
     delete (file_name);
-
-    List(Record)* recs = RECORDS;
-    printf("%p",recs);
+ 
 }
 
 #pragma endregion
