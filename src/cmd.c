@@ -14,12 +14,13 @@ void cmd_add_record(List(string) * a)
 }
 void cmd_add_field(List(Pair) * pairs, List(Tag) * tags)
 {
-    Pair pair;
+    
     string name = NULL;
     string constr = NULL;
     string format = NULL;
     string info = NULL;
     bool unique = false;
+    Pair pair;
     Foreach(Pair, pair, pairs)
     {
         if (!strcmp(pair.key, "name"))
@@ -50,15 +51,7 @@ void cmd_add_field(List(Pair) * pairs, List(Tag) * tags)
         if (!strcmp(tag.value, "unique"))
         {
             unique = true;
-        }
-        else if (!strcmp(tag.value, "disable-unique"))
-            ;
-        else if (!strcmp(pair.key, "disable-constr"))
-            ;
-        else if (!strcmp(pair.key, "disable-format"))
-            ;
-        else if (!strcmp(pair.key, "disable-info"))
-            ;
+        } 
         else
         {
             warn("Unknown keyword:%s\n", NS_LOG(pair.value));
@@ -298,9 +291,9 @@ void cmd_remove_field(List(Pair) * pairs, List(Tag) * tags)
 void cmd_update_record(List(Pair) * pairs, List(Tag) * tags)
 {
     Pair pair;
-    string filter;
-    string field;
-    string value;
+    string filter = NULL;
+    string field= NULL;
+    string value= NULL;
     Foreach(Pair, pair, pairs)
     {
         if (!strcmp(pair.key, "filter"))

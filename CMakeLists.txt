@@ -3,25 +3,21 @@ project(Database)
 
 #版本号
 set(VERSION_MAJOR 6)
-set(VERSION_MINOR 1)
+set(VERSION_MINOR 2)
 set(VERSION_PATCH 0)
 
 #编译器参数
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_C_FLAGS_DEBUG "-O0 -g -Wall -Werror -Wno-unknown-pragmas -Wno-parentheses -DDEBUG")
-set(CMAKE_C_FLAGS_RELEASE "-O3 -ggdb -Wall -Wno-unknown-pragmas")
-
-#单元测试
-include(CTest)
-enable_testing()
-
+set(CMAKE_C_FLAGS_RELEASE "-O3 -Wall -Wno-unknown-pragmas -DDEBUG")
+ 
+#enable_testing()
 
 aux_source_directory(src SRC)
-add_executable(Database ${SRC})
-target_include_directories(Database PUBLIC include)
-target_link_libraries(Database PUBLIC m)
- 
-add_test(NAME dbtest COMMAND Database)
+add_executable(db ${SRC})
+target_include_directories(db PUBLIC include)
+target_link_libraries(db PUBLIC m)
+
 
 # #打包
 # include(InstallRequiredSystemLibraries) 

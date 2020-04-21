@@ -34,7 +34,7 @@ char opchars[] = "+-*/><=,|!%&";
 
 int get_type(char ch)
 {
-     if (ch >= '0' && ch <= '9' || ch == '.' || ch == '\"' )
+     if ((ch >= '0' && ch <= '9' )|| ch == '.' || ch == '\"' )
           return type_value;
 
      if (ch == '(')
@@ -43,7 +43,7 @@ int get_type(char ch)
      if (ch == ')')
           return type_rightparn;
 
-     if (ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch == '_')
+     if ((ch >= 'a' && ch <= 'z') ||( ch >= 'A' && ch <= 'Z') || ch == '_')
           return type_name;
 
      for (int i = 0; i < strlen(opchars); i++)
@@ -132,6 +132,7 @@ char *eval(Calc calc, const char *expr)
                Element newelement;
                newelement.literal = literal;
                newelement.type = type_value;
+               newelement.operator_kind = 0;
                list_append(Element)(elements, newelement);
                literal = (char *)newmem(sizeof(char), expr_len + 1);
                literal_length = 0;
@@ -153,6 +154,7 @@ char *eval(Calc calc, const char *expr)
                     Element newelement;
                     newelement.literal = literal;
                     newelement.type = type_leftparn;
+                    newelement.operator_kind = 0;
                     list_append(Element)(elements, newelement);
 
                     literal = (char *)newmem(sizeof(char), expr_len + 1);
@@ -165,6 +167,7 @@ char *eval(Calc calc, const char *expr)
                     Element newelement;
                     newelement.literal = literal;
                     newelement.type = type_rightparn;
+                    newelement.operator_kind = 0;
                     list_append(Element)(elements, newelement);
 
                     literal = (char *)newmem(sizeof(char), expr_len + 1);
@@ -180,6 +183,7 @@ char *eval(Calc calc, const char *expr)
                     Element newelement;
                     newelement.literal = literal;
                     newelement.type = thistype;
+                    newelement.operator_kind = 0;
                     list_append(Element)(elements, newelement);
 
                     literal = (char *)newmem(sizeof(char), expr_len + 1);

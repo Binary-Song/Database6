@@ -148,7 +148,7 @@ CharType getchartype(char c)
     {
         return CTYPE_BACHSLASH;
     }
-    if (c >= '0' && c <= '9' || c == '.')
+    if ((c >= '0' && c <= '9' )|| c == '.')
     {
         return CTYPE_NUMBER;
     }
