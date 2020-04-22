@@ -168,7 +168,7 @@ db update-field name "ID" set-name "学号" set-constr "match(value,\"[0-9]{8}\"
 
 每个值对应一个字段。如果n小于字段数，缺少的值会记作空，如果n大于字段数，多出的值会被忽略。
 
-列出记录
+列出字段
 ------------
 用`list-record`指令列出记录信息：
 > db list-record [filter *筛选条件* | field *字段名* is *值* | field *字段名* within *范围*] [sort *排序方式* | sort-ascending *字段名* | sort-descending *字段名*] [raw] [detailed]
