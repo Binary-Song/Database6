@@ -27,7 +27,7 @@ add-field unique constr "value>0" name "Hello World"
 
 例如:
 ```
-add-record 0 1 "Hi"
+db add-record 0 1 "Hi"
 ```
 在必要时应为参数添加引号，这点遵循用户使用的bash的语法要求。包含词法或语法错误的指令不能执行，且会引发警告，提示错误原因。
 
@@ -43,7 +43,7 @@ add-record 0 1 "Hi"
 
 例如：
 ```
-list-record filter "value(\"学号\")%2=0"
+db list-record filter "value(\"学号\")%2=0"
 ```
 由于外层的引号，表达式`value("学号")%2=0`被写作`value(\"学号\")%2=0`。若不加外层引号，则bash可能会提示语法错误。
 
@@ -131,7 +131,7 @@ db add-field name "得分" constr "value>=0&value<=100" format "value+\"分\""
 列出记录
 ------------
 用`list-field`指令列出全部记录。
-> list-field [detailed]
+> db list-field [detailed]
 
 `detailed`表示列出详细信息，无此标签则仅输出字段名和提示信息。
 
@@ -146,7 +146,7 @@ db add-field name "得分" constr "value>=0&value<=100" format "value+\"分\""
 
 例如：
 ```
-update-field name "ID" set-name "学号" set-constr "match(value,\"[0-9]{8}\")" disable-format set-unique 1
+db update-field name "ID" set-name "学号" set-constr "match(value,\"[0-9]{8}\")" disable-format set-unique 1
 ```
 这条指令将字段“ID”重命名为“学号”、约束设置为满足正则表达式`[0-9]{8}`（8位数字）的字符串、将格式设置为空（禁用格式）并且将唯一性设置为真。
 
@@ -154,7 +154,8 @@ update-field name "ID" set-name "学号" set-constr "match(value,\"[0-9]{8}\")" 
 ------------
 
 用`remove-field`指令来删除字段：
-> remove-field name *字段名*
+> db remove-field name *字段名*
+字段中的全部数据将一并删除。
 
 记录
 ------------
@@ -163,14 +164,14 @@ update-field name "ID" set-name "学号" set-constr "match(value,\"[0-9]{8}\")" 
 添加记录
 ------------
 用`add-record`指令来添加一条记录：
-> add-record *值1* *值2* ... *值n*
+> db add-record *值1* *值2* ... *值n*
 
 每个值对应一个字段。如果n小于字段数，缺少的值会记作空，如果n大于字段数，多出的值会被忽略。
 
 列出记录
 ------------
 用`list-record`指令列出记录信息：
-> db list-record [filter *筛选条件*|field *字段名* is *值*|field *字段名* within *范围*] [sort *排序方式*|sort-ascending *字段名*|sort-descending *字段名*] [raw] [detailed]
+> db list-record [filter *筛选条件* | field *字段名* is *值* | field *字段名* within *范围*] [sort *排序方式* | sort-ascending *字段名* | sort-descending *字段名*] [raw] [detailed]
 
 用`field <字段名>`配合`is <值>`或`within <范围>`来针对某字段的值进行筛选。
 
@@ -193,6 +194,8 @@ db list-record field "学号" within "m6M10"
 函数|功能|参数
 :-: | :-: | :-: 
 `value(s)`|取得字段`s`的值|`s`是字符串。
+
+
 例如：
 ```
 db list-record filter "value(\"学号\")%2=0"
@@ -235,7 +238,7 @@ db list-record sort "valuea(\"班级\")\<valueb(\"班级\")|valuea(\"班级\")\=
 修改记录
 ------------
 用`update-record`指令来将筛选出的记录的某个字段赋予新值。
-> update-record [filter *筛选条件*|field *字段名* is *值*field *字段名* within *范围* set *字段名* to *新值*
+> db update-record [filter *筛选条件* | field *字段名* is *值* | field *字段名* within *范围* set *字段名* to *新值*
 
 关于筛选，参见“列出记录”。
 
@@ -244,7 +247,7 @@ db list-record sort "valuea(\"班级\")\<valueb(\"班级\")|valuea(\"班级\")\=
 删除记录
 ------------
 用`remove-record`指令来删除筛选出的记录：
-> remove-record [filter *筛选条件*|field *字段名* is *值*|field *字段名* within *范围*]
+> db remove-record [filter *筛选条件* | field *字段名* is *值* | field *字段名* within *范围*]
 
 关于筛选，参见“列出记录”。
 
@@ -256,13 +259,18 @@ db list-record sort "valuea(\"班级\")\<valueb(\"班级\")|valuea(\"班级\")\=
 载入文件
 -----------
 用`load`指令载入文件:
-> load file *路径*
+> db load file *路径*
 
 文件路径可以是相对路径或绝对路径。
 
 读取文件
 -----------
 用`save`指令读取文件：
-> save file *路径*
+> db save file *路径*
 
 文件路径可以是相对路径或绝对路径。
+
+清理缓存
+-----------
+用`clean`指令清除缓存（/tmp/.db_staged）。这会使得未保存的工作全部清空。
+> db clean
