@@ -664,7 +664,7 @@ void db_delete_record(const_string filter)
 {
     if (!filter)
     {
-        filter = "1";
+        filter = "0";
     }
     List(int) *list = filter_record(filter);
 

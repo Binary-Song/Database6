@@ -16,7 +16,6 @@ void cmd_add_record(List(string) * a)
 }
 void cmd_add_field(List(Pair) * pairs, List(Tag) * tags)
 {
-
     string name = NULL;
     string constr = NULL;
     string format = NULL;
@@ -89,9 +88,10 @@ void cmd_list_records(List(Pair) * pairs, List(Tag) * tags)
     string sort_ascending_field = NULL;
     string sort_descending_field = NULL;
     Pair pair;
+
     Foreach(Pair, pair, pairs)
     {
-        if (!strcmp(pair.key, "filter") || !strcmp(pair.key, "field") || !strcmp(pair.key, "range") || !strcmp(pair.key, "equal"))
+        if (!strcmp(pair.key, "filter") || !strcmp(pair.key, "field") || !strcmp(pair.key, "within") || !strcmp(pair.key, "is"))
             ;
         else if (!strcmp(pair.key, "sort"))
         {
@@ -158,18 +158,13 @@ void cmd_list_records(List(Pair) * pairs, List(Tag) * tags)
 }
 
 void cmd_remove_record(List(Pair) * pairs, List(Tag) * tags)
-{
-    Pair pair;
-    string filter = NULL;
-
-    Foreach(Pair, pair, pairs)
+{  
+    char * filter = filter_generate(pairs, tags);
+    if (!filter)
     {
-        if (!strcmp(pair.key, "filter"))
-        {
-            filter = pair.value;
-            break;
-        }
-    }
+        warn("A filter should be provided.\n");
+        return;
+    } 
     db_delete_record(filter);
 }
 
@@ -327,7 +322,7 @@ void cmd_update_record(List(Pair) * pairs, List(Tag) * tags)
     string to = NULL;
     Foreach(Pair, pair, pairs)
     {
-        if (!strcmp(pair.key, "filter") || !strcmp(pair.key, "field") || !strcmp(pair.key, "range") || !strcmp(pair.key, "equal"))
+        if (!strcmp(pair.key, "filter") || !strcmp(pair.key, "field") || !strcmp(pair.key, "within") || !strcmp(pair.key, "is"))
             ;
         else if (!strcmp(pair.key, "set"))
         {
@@ -348,7 +343,12 @@ void cmd_update_record(List(Pair) * pairs, List(Tag) * tags)
         warn("Keyword \"set\" required!\n");
         return;
     }
-    char * filter = filter_generate(pairs, tags);
+    char *filter = filter_generate(pairs, tags);
+    if (!filter)
+    {
+        warn("A filter should be provided.\n");
+        return;
+    }
 
     if (!to)
     {
@@ -426,7 +426,6 @@ char *filter_generate(List(Pair) * pairs, List(Tag) * tags)
     string equal = NULL;
     Foreach(Pair, pair, pairs)
     {
-
         if (!strcmp(pair.key, "filter"))
         {
             filter = pair.value;
@@ -435,11 +434,11 @@ char *filter_generate(List(Pair) * pairs, List(Tag) * tags)
         {
             field_tested = pair.value;
         }
-        else if (!strcmp(pair.key, "range"))
+        else if (!strcmp(pair.key, "within"))
         {
             range = pair.value;
         }
-        else if (!strcmp(pair.key, "equal"))
+        else if (!strcmp(pair.key, "is"))
         {
             equal = pair.value;
         }
@@ -458,13 +457,11 @@ char *filter_generate(List(Pair) * pairs, List(Tag) * tags)
             }
             else
             {
-                warn("Either \"filter\", \"field ... equal ... \",or \"field ... within ...\" should exist.\n");
                 return NULL;
             }
         }
         else
         {
-            warn("Either \"filter\", \"field ... equal ... \",or \"field ... within ...\" should exist.\n");
             return NULL;
         }
     }

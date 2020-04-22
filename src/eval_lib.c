@@ -429,6 +429,8 @@ List(Op) * GetLibOps()
     list_append(Op)(ops, initOp("<=", OP_less_or_eq, 6, false));
     list_append(Op)(ops, initOp("&&", OP_and, 11, false));
     list_append(Op)(ops, initOp("||", OP_or, 12, false));
+    list_append(Op)(ops, initOp("&", OP_and, 11, false));
+    list_append(Op)(ops, initOp("|", OP_or, 12, false));
     list_append(Op)(ops, initOp("!", OP_not, 2, true));
     list_append(Op)(ops, initOp(",", OP_comma, 15, false));
     list_append(Op)(ops, initOp("%", OP_mod, 3, false));

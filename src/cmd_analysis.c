@@ -39,8 +39,8 @@ string dict_key[] = {
     "sort",       //
     "value",      //
     "field",
-    "equal",
-    "range",
+    "is",
+    "within",
     "set",
     "to",
     "file",
