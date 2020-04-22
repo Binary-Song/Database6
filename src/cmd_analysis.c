@@ -39,7 +39,13 @@ string dict_key[] = {
     "sort",       //
     "value",      //
     "field",
+    "equal",
+    "range",
+    "set",
+    "to",
     "file",
+    "sort-ascending",
+    "sort-descending",
 };
 string dict_tag[] = {
     "unique",         //
@@ -79,7 +85,7 @@ CMDInfo_Pair cmdinfobank_pair[] =
         {"remove-field", cmd_remove_field},    //
         {"update-record", cmd_update_record},  //
         {"save", cmd_save},                    //
-        {"load", cmd_load},                    // 
+        {"load", cmd_load},                    //
 };
 
 #pragma region SCANNER THINGS 词法分析相关
@@ -148,7 +154,7 @@ CharType getchartype(char c)
     {
         return CTYPE_BACHSLASH;
     }
-    if ((c >= '0' && c <= '9' )|| c == '.')
+    if ((c >= '0' && c <= '9') || c == '.')
     {
         return CTYPE_NUMBER;
     }

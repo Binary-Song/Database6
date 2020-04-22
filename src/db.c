@@ -491,18 +491,24 @@ void db_config_field(const_string field_name,                      //
         else if (check_res.reason == REASON_INFO_CONSTR)
         {
             warn("Unable to configure Field " C_FIELD "%s" C_WARNING ". "
-                 "New constraint \"%s\" failed at record %d, value:\"%s\".\n",
+                 "New constraint \"%s\" not met by existing records. Listing them...\n",
                  NS_LOG(field_name), NS_LOG(new_constraint), check_res.index, NS_LOG(GET_VALUE(target_i, check_res.index)));
             char *filter = new (200);
-            sprintf(filter, "value(\"%s\")=%s", NS_LOG(field_name), NS_LOG(GET_VALUE(target_i, check_res.index)));
+            sprintf(filter, "value(\"%s\")=\"%s\"", NS_LOG(field_name), NS_LOG(GET_VALUE(target_i, check_res.index)));
             db_list_record(filter, NULL, true, false);
             delete (filter);
+            warn(C_WARNING"Make sure all records are legal before resetting constraint.\n"C_RESET);
         }
         else if (check_res.reason == REASON_INFO_UNIQUE)
         {
             warn("Unable to configure Field " C_FIELD "%s" C_WARNING ". "
-                 "Values in field are not unique as configured. Colliding records %d,%d, value:%s\n",
-                 NS_LOG(field_name), check_res.index, check_res.another_index, NS_LOG(GET_VALUE(target_i, check_res.index)));
+                 "Values in field are not unique as configured. Listing colliding records...\n",
+                 NS_LOG(field_name));
+            char *filter = new (200);
+            sprintf(filter, "value(\"%s\")=\"%s\"", NS_LOG(field_name), NS_LOG(GET_VALUE(target_i, check_res.index)));
+            db_list_record(filter, NULL, true, false);
+            delete (filter);
+            warn("Change either of them before you could set this field unique.\n");
         }
 
         list_set(Field)(FIELDS, target_i, oldfld); //set 同时会调用delete!
@@ -685,57 +691,55 @@ void db_delete_record(const_string filter)
 void db_update_record(const_string filter, const_string field_name, const_string new_value)
 {
     Field fld;
-    int fi = -1;
+
     List(int) *rec = filter_record(filter);
-    int record_index;
-    if (rec->count > 0)
-    {
-        record_index = list_get(int)(rec, 0);
-    }
-    else
+
+    if (rec->count == 0)
     {
         warn("Record not found\n");
         list_delete(int)(rec);
         return;
     }
-    list_delete(int)(rec);
-
-    //找到字段
-    Foreach(Field, fld, FIELDS)
+    int record_index;
+    Foreach(int, record_index, rec)
     {
-        fi++;
-        if (!strcmp(fld.name, field_name))
+        //找到字段
+        int fi = -1;
+        Foreach(Field, fld, FIELDS)
         {
-            string oldvalue = string_duplicate(_get_value_by_index(fi, record_index));
-            Record record = list_get(Record)(RECORDS, record_index);
-            list_set(string)(record.values, fi, string_duplicate(new_value));
-
-            int another = 0;
-            if (!_check_constraint(fi, db_record_count() - 1))
+            fi++;
+            if (!strcmp(fld.name, field_name))
             {
+                string oldvalue = string_duplicate(_get_value_by_index(fi, record_index));
+                Record record = list_get(Record)(RECORDS, record_index);
+                //先改好值，再判断对错，不行改回
+                list_set(string)(record.values, fi, string_duplicate(new_value));
 
-                warn("Invalid record. "
-                     "Field " C_FIELD "%s" C_WARNING " 's constraint " C_LOG_VALUE "%s" C_WARNING " cannot be satisfied "
-                     "by value " C_LOG_VALUE "%s" C_WARNING ".\n",
-                     NS_LOG(GET_FIELD(fi).name), NS_LOG(GET_FIELD(fi).constraint), NS_LOG(GET_VALUE(fi, record_index)));
+                int another = 0;
+                if (!_check_constraint(fi, db_record_count() - 1))
+                {
+                    warn("Invalid record. "
+                         "Field " C_FIELD "%s" C_WARNING " 's constraint " C_LOG_VALUE "%s" C_WARNING " cannot be satisfied "
+                         "by value " C_LOG_VALUE "%s" C_WARNING ".\n",
+                         NS_LOG(GET_FIELD(fi).name), NS_LOG(GET_FIELD(fi).constraint), NS_LOG(GET_VALUE(fi, record_index)));
 
-                list_set(string)(record.values, fi, oldvalue);
-                return;
+                    list_set(string)(record.values, fi, oldvalue);
+                    return;
+                }
+                else if (!_check_unique(fi, db_record_count() - 1, &another))
+                {
+                    warn("Invalid record. "
+                         "Values in Field " C_FIELD "%s" C_WARNING " should be unique. But the given value " C_LOG_VALUE "%s" C_WARNING " already exists in record %d.\n",
+                         NS_LOG(GET_FIELD(fi).name), NS_LOG(GET_VALUE(fi, record_index)), another);
+
+                    list_set(string)(record.values, fi, oldvalue);
+                    return;
+                }
             }
-            else if (!_check_unique(fi, db_record_count() - 1, &another))
-            {
-
-                warn("Invalid record. "
-                     "Values in Field " C_FIELD "%s" C_WARNING " should be unique. But the given value " C_LOG_VALUE "%s" C_WARNING " already exists in record %d.\n",
-                     NS_LOG(GET_FIELD(fi).name), NS_LOG(GET_VALUE(fi, record_index)), another);
-
-                list_set(string)(record.values, fi, oldvalue);
-                return;
-            }
-
-            return;
         }
     }
+
+    list_delete(int)(rec);
 }
 
 static int record_index_context;
@@ -814,14 +818,25 @@ int _base_sort(const void *pa, const void *pb)
     sort_context_b = *((int *)pb);
 
     char *e = eval(sort_calc, sort_expr);
-    int r = 0;
-    if (!e || !strcmp(e, "0"))
-        r = -1;
-    else
-        r = 1;
+
+    if (!e)
+    {
+        warn("Sort expression error.\n");
+        delete (e);
+        return 0;
+    }
+
+    char *end;
+    double r = -strtod(e, &end) * 5;
+
+    if (*end)
+    {
+        warn("Invalid sort expression result.\n");
+        delete (e);
+    }
 
     delete (e);
-    return r;
+    return (int)r;
 }
 char *func_valuea(const char *a)
 {
@@ -870,7 +885,7 @@ List(int) * sort_record(List(int) * rec_indices, const char *sort)
     list_append(Func)(sort_calc.functions, func);
 
     char *expr = new (strlen(sort) + 10);
-    sprintf(expr, "(%s)>=0", sort);
+    sprintf(expr, "((%s)!=0)-0.5", sort);
     sort_expr = expr;
 
     int *array = new (sizeof(int) * (rec_indices->count));
@@ -904,7 +919,7 @@ void db_list_record(const char *filter, const char *sort, bool raw, bool detaile
 
     List(int) *indices = filter_record(filter);
     printf("Listed:%d\n", indices->count);
-    
+
     Field f;
     if (!detailed)
     {

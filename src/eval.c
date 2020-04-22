@@ -261,7 +261,7 @@ char *eval_e(Calc calc, List(Element) * _elems, bool *error)
                               }
                          }
                          bool has_error = false;
-                         char *result = eval_e(calc, inner_elements, &has_error);
+                         char * result = eval_e(calc, inner_elements, &has_error);
                          log("SUB-EXPRESSION RESULT: %s\n", NS_LOG(result));
 
                          list_delete(Element)(inner_elements);
@@ -374,7 +374,7 @@ char *eval_e(Calc calc, List(Element) * _elems, bool *error)
                     if (replace_done)
                          break;
                     // ERROR: Wrong Name
-                    warn("Unknown function or variable name.\n");
+                    warn("Unknown function or variable name %s.\n",e.literal);
                     *error = true;
                     list_delete(Element)(elements);
                     return NULL;
