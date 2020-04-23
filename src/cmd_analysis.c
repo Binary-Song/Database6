@@ -40,6 +40,7 @@ string dict_key[] = {
     "value",      //
     "field",
     "is",
+    "is-not",
     "within",
     "set",
     "to",

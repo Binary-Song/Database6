@@ -91,7 +91,7 @@ void cmd_list_records(List(Pair) * pairs, List(Tag) * tags)
 
     Foreach(Pair, pair, pairs)
     {
-        if (!strcmp(pair.key, "filter") || !strcmp(pair.key, "field") || !strcmp(pair.key, "within") || !strcmp(pair.key, "is"))
+        if (!strcmp(pair.key, "filter") || !strcmp(pair.key, "field") || !strcmp(pair.key, "within") || !strcmp(pair.key, "is")|| !strcmp(pair.key, "is-not"))
             ;
         else if (!strcmp(pair.key, "sort"))
         {
@@ -158,13 +158,13 @@ void cmd_list_records(List(Pair) * pairs, List(Tag) * tags)
 }
 
 void cmd_remove_record(List(Pair) * pairs, List(Tag) * tags)
-{  
-    char * filter = filter_generate(pairs, tags);
+{
+    char *filter = filter_generate(pairs, tags);
     if (!filter)
     {
         warn("A filter should be provided.\n");
         return;
-    } 
+    }
     db_delete_record(filter);
 }
 
@@ -322,7 +322,7 @@ void cmd_update_record(List(Pair) * pairs, List(Tag) * tags)
     string to = NULL;
     Foreach(Pair, pair, pairs)
     {
-        if (!strcmp(pair.key, "filter") || !strcmp(pair.key, "field") || !strcmp(pair.key, "within") || !strcmp(pair.key, "is"))
+        if (!strcmp(pair.key, "filter") || !strcmp(pair.key, "field") || !strcmp(pair.key, "within") || !strcmp(pair.key, "is")|| !strcmp(pair.key, "is-not"))
             ;
         else if (!strcmp(pair.key, "set"))
         {
@@ -385,10 +385,19 @@ void cmd_save(List(Pair) * pairs, List(Tag) * tags)
     }
 }
 
-char *equal_to_filter(const char *field, const char *eqto)
+char *equal_to_filter(const char *field, const char *eqto, bool reversed)
 {
-    char *res = new (strlen(eqto) + strlen(field) + 20);
-    sprintf(res, "value(\"%s\")=%s", field, eqto);
+    char *res;
+    if (reversed)
+    {
+        res = new (strlen(eqto) + strlen(field) + 20);
+        sprintf(res, "value(\"%s\")!=\"%s\"", field, eqto);
+    }
+    else
+    {
+        res = new (strlen(eqto) + strlen(field) + 20);
+        sprintf(res, "value(\"%s\")=\"%s\"", field, eqto);
+    } 
     return res;
 }
 
@@ -416,7 +425,7 @@ char *range_to_filter(const char *field, const char *range)
 }
 
 char *range_to_filter(const char *field, const char *range);
-char *equal_to_filter(const char *field, const char *eqto);
+char *equal_to_filter(const char *field, const char *eqto,bool rev);
 char *filter_generate(List(Pair) * pairs, List(Tag) * tags)
 {
     Pair pair;
@@ -424,6 +433,7 @@ char *filter_generate(List(Pair) * pairs, List(Tag) * tags)
     string field_tested = NULL;
     string range = NULL;
     string equal = NULL;
+    string not_equal = NULL;
     Foreach(Pair, pair, pairs)
     {
         if (!strcmp(pair.key, "filter"))
@@ -442,6 +452,10 @@ char *filter_generate(List(Pair) * pairs, List(Tag) * tags)
         {
             equal = pair.value;
         }
+        else if (!strcmp(pair.key, "is-not"))
+        {
+            not_equal = pair.value;
+        }
     }
     if (!filter)
     {
@@ -453,7 +467,11 @@ char *filter_generate(List(Pair) * pairs, List(Tag) * tags)
             }
             else if (equal)
             {
-                filter = equal_to_filter(field_tested, equal);
+                filter = equal_to_filter(field_tested, equal,false);
+            }
+            else if (not_equal)
+            {
+                filter = equal_to_filter(field_tested, not_equal,true);
             }
             else
             {

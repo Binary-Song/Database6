@@ -497,7 +497,7 @@ void db_config_field(const_string field_name,                      //
             sprintf(filter, "value(\"%s\")=\"%s\"", NS_LOG(field_name), NS_LOG(GET_VALUE(target_i, check_res.index)));
             db_list_record(filter, NULL, true, false);
             delete (filter);
-            warn(C_WARNING"Make sure all records are legal before resetting constraint.\n"C_RESET);
+            warn(C_WARNING "Make sure all records are legal before resetting constraint.\n" C_RESET);
         }
         else if (check_res.reason == REASON_INFO_UNIQUE)
         {
@@ -645,9 +645,14 @@ void db_add_record(List(string) * values)
         {
             //不行就删掉
             warn("Invalid record. "
-                 "Values in Field " C_FIELD "%s" C_WARNING " should be unique. But the given value " C_LOG_VALUE "%s" C_WARNING " already exists in record %d.\n",
+                 "Values in Field " C_FIELD "%s" C_WARNING " should be unique. But the given value " C_LOG_VALUE "%s" C_WARNING " already exists in the following record:\n",
                  NS_LOG(GET_FIELD(fi).name), NS_LOG(GET_VALUE(fi, db_record_count() - 1)), another);
             list_remove(Record)(RECORDS, db_record_count() - 1, 1);
+            
+            char *filter = new (200);
+            sprintf(filter, "value(\"%s\")=\"%s\"", NS(GET_FIELD(fi).name), NS(GET_VALUE(fi, another)));
+            db_list_record(filter, NULL, true, false);
+            delete (filter);
             return;
         }
     }
@@ -686,7 +691,8 @@ void db_delete_record(const_string filter)
     }
 
     delete (rev_sorted);
-}
+} 
+
 
 void db_update_record(const_string filter, const_string field_name, const_string new_value)
 {
@@ -731,8 +737,11 @@ void db_update_record(const_string filter, const_string field_name, const_string
                     warn("Invalid record. "
                          "Values in Field " C_FIELD "%s" C_WARNING " should be unique. But the given value " C_LOG_VALUE "%s" C_WARNING " already exists in record %d.\n",
                          NS_LOG(GET_FIELD(fi).name), NS_LOG(GET_VALUE(fi, record_index)), another);
-
                     list_set(string)(record.values, fi, oldvalue);
+                    char *filter = new (200);
+                    sprintf(filter, "value(\"%s\")=\"%s\"", NS(GET_FIELD(fi).name), NS(GET_VALUE(fi, another)));
+                    db_list_record(filter, NULL, true, false);
+                    delete (filter);
                     return;
                 }
             }
@@ -909,7 +918,7 @@ List(int) * sort_record(List(int) * rec_indices, const char *sort)
 
 void db_list_record(const char *filter, const char *sort, bool raw, bool detailed)
 {
-    printf("Record Totoal:%d, ", RECORDS->count);
+    printf("Record Total:%d, ", RECORDS->count);
 
     //筛选符合条件的记录的index
     if (!filter)

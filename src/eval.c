@@ -34,7 +34,7 @@ char opchars[] = "+-*/><=,|!%&";
 
 int get_type(char ch)
 {
-     if ((ch >= '0' && ch <= '9' )|| ch == '.' || ch == '\"' )
+     if ((ch >= '0' && ch <= '9') || ch == '.' || ch == '\"')
           return type_value;
 
      if (ch == '(')
@@ -43,7 +43,7 @@ int get_type(char ch)
      if (ch == ')')
           return type_rightparn;
 
-     if ((ch >= 'a' && ch <= 'z') ||( ch >= 'A' && ch <= 'Z') || ch == '_')
+     if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_')
           return type_name;
 
      for (int i = 0; i < strlen(opchars); i++)
@@ -108,7 +108,7 @@ char *eval(Calc calc, const char *expr)
      {
           return NULL;
      }
-
+     log("%s", expr);
      int expr_len = strlen(expr);
      List(Element) *elements = list_create(Element)(element_delete);
      bool quoted = false;
@@ -196,7 +196,7 @@ char *eval(Calc calc, const char *expr)
      log("MAIN EXPRESSION:\n");
      log_elements(elements);
      char *a = eval_e(calc, elements, &error);
-     log("MAIN EXPRESSION RESULT: %s\n",NS_LOG(a));
+     log("MAIN EXPRESSION RESULT: %s\n", NS_LOG(a));
      list_delete(Element)(elements);
      return a;
 }
@@ -261,7 +261,7 @@ char *eval_e(Calc calc, List(Element) * _elems, bool *error)
                               }
                          }
                          bool has_error = false;
-                         char * result = eval_e(calc, inner_elements, &has_error);
+                         char *result = eval_e(calc, inner_elements, &has_error);
                          log("SUB-EXPRESSION RESULT: %s\n", NS_LOG(result));
 
                          list_delete(Element)(inner_elements);
@@ -374,7 +374,7 @@ char *eval_e(Calc calc, List(Element) * _elems, bool *error)
                     if (replace_done)
                          break;
                     // ERROR: Wrong Name
-                    warn("Unknown function or variable name %s.\n",e.literal);
+                    warn("Unknown function or variable name %s.\n", e.literal);
                     *error = true;
                     list_delete(Element)(elements);
                     return NULL;

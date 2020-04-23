@@ -7,9 +7,9 @@ set(VERSION_MINOR 2)
 set(VERSION_PATCH 0)
 
 #编译器参数
-set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_C_FLAGS_DEBUG "-O0 -g -Wall -Werror -Wno-unknown-pragmas -Wno-parentheses -DDEBUG")
-set(CMAKE_C_FLAGS_RELEASE "-O3 -Wall -Wno-unknown-pragmas -DDEBUG")
+set(CMAKE_BUILD_TYPE RELEASE)
+set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb -Wall -Wno-unknown-pragmas -Wno-parentheses -DDEBUG")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -Wall -Wno-unknown-pragmas -Wno-parentheses")
  
 #enable_testing()
 
