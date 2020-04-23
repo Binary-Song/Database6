@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.7.2)
 project(Database)
 
 #版本号
@@ -7,9 +7,9 @@ set(VERSION_MINOR 2)
 set(VERSION_PATCH 0)
 
 #编译器参数
-set(CMAKE_BUILD_TYPE RELEASE)
-set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb -Wall -Wno-unknown-pragmas -Wno-parentheses -DDEBUG")
-set(CMAKE_C_FLAGS_RELEASE "-O3 -Wall -Wno-unknown-pragmas -Wno-parentheses")
+set(CMAKE_BUILD_TYPE DEBUG)
+set(CMAKE_C_FLAGS_DEBUG "-O0 -g -Wall -Wno-unknown-pragmas -Wno-parentheses  -Wno-format-zero-length -DDEBUG")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -Wall -Wno-unknown-pragmas -Wno-parentheses -Wno-format-zero-length")
  
 #enable_testing()
 

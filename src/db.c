@@ -648,7 +648,7 @@ void db_add_record(List(string) * values)
                  "Values in Field " C_FIELD "%s" C_WARNING " should be unique. But the given value " C_LOG_VALUE "%s" C_WARNING " already exists in the following record:\n",
                  NS_LOG(GET_FIELD(fi).name), NS_LOG(GET_VALUE(fi, db_record_count() - 1)), another);
             list_remove(Record)(RECORDS, db_record_count() - 1, 1);
-            
+
             char *filter = new (200);
             sprintf(filter, "value(\"%s\")=\"%s\"", NS(GET_FIELD(fi).name), NS(GET_VALUE(fi, another)));
             db_list_record(filter, NULL, true, false);
@@ -691,8 +691,7 @@ void db_delete_record(const_string filter)
     }
 
     delete (rev_sorted);
-} 
-
+}
 
 void db_update_record(const_string filter, const_string field_name, const_string new_value)
 {
@@ -830,7 +829,8 @@ int _base_sort(const void *pa, const void *pb)
 
     if (!e)
     {
-        warn("Sort expression error.\n");
+        warn("Sort expression error: %s.\n", sort_expr);
+
         delete (e);
         return 0;
     }
@@ -1004,16 +1004,6 @@ void db_save_file(const char *fn)
 
     char *file_name = string_duplicate(fn);
 
-    if (file_name[0] != '/')
-    {
-        char *last = strrchr(this_file, '/');
-        int diff = last - this_file;
-        char *whole_path = new (strlen(file_name) + strlen(this_file) + 1);
-        strncat(whole_path, this_file, diff + 1);
-        strcat(whole_path, file_name);
-        file_name = whole_path;
-    }
-
     FILE *f = fopen(file_name, "w");
     if (!f)
     {
@@ -1074,16 +1064,6 @@ void db_load_file(const char *fn)
     }
 
     char *file_name = string_duplicate(fn);
-
-    if (file_name[0] != '/')
-    {
-        char *last = strrchr(this_file, '/');
-        int diff = last - this_file;
-        char *whole_path = new (strlen(file_name) + strlen(this_file) + 1);
-        strncat(whole_path, this_file, diff + 1);
-        strcat(whole_path, file_name);
-        file_name = whole_path;
-    }
 
     FILE *f = fopen(file_name, "r");
     if (!f)

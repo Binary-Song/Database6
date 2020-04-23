@@ -4,7 +4,6 @@
 #include "stdlib.h"
 #undef log
 #include "math.h"
-#include "regex.h"
 #include "utf8.h"
 #define ERROR 0.00001
 
@@ -307,27 +306,28 @@ char *FX_round(const char *a)
     return res;
 }
 
-char *FX_match(const char *a)
+char *FX_char_count(const char *a)
 {
     if (!a)
     {
         return NULL;
     }
-    char *res;
-    char *reg = new (strlen(a) + 1);
+    char *res = new (10);
+    char *ch = new (strlen(a) + 1);
     char *input = new (strlen(a) + 1);
-    sscanf(a, "%s\n%s", input, reg);
-    regex_t r;
-    regmatch_t match[1];
-    regcomp(&r, reg, REG_EXTENDED);
-    if (regexec(&r, input, 1, match, 0) != REG_NOMATCH)
+    sscanf(a, "%s\n%s", input, ch);
+
+    int count = 0;
+    while (*input)
     {
-        res = string_duplicate("1");
-    }
-    else
-    {
-        res = string_duplicate("0");
-    }
+        if (*input == *ch)
+        {
+            count++;
+        }
+        input++;
+    } 
+
+    sprintf(res,"%d",count);
 
     return res;
 }
@@ -442,7 +442,7 @@ List(Func) * GetLibFuncs()
     List(Func) *funcs = list_create(Func)(NULL);
     list_append(Func)(funcs, initFunc("floor", FX_floor));
     list_append(Func)(funcs, initFunc("round", FX_round));
-    list_append(Func)(funcs, initFunc("match", FX_match));
+    list_append(Func)(funcs, initFunc("charcount", FX_char_count));
     list_append(Func)(funcs, initFunc("strlen", FX_strlen));
     return funcs;
 }

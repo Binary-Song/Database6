@@ -7,17 +7,17 @@
 
 #define LOG_TO_FILE //可以关闭，这样log直接打到公屏上
 
-#define C_WARNING "\e[033m"
-#define C_ERROR "\e[031m"
-#define C_DOMAIN "\e[036m"
-#define C_RESET "\e[0m"
-#define C_RECORD "\e[037m"
-#define C_FIELD "\e[034m"
-#define C_VALUE "\e[036m"
-#define C_KEY "\e[032m"
-#define C_NULL "\e[031m"
-#define C_MSG "\e[032m"
-#define C_RAW "\e[035m"
+#define C_WARNING ""
+#define C_ERROR ""
+#define C_DOMAIN ""
+#define C_RESET ""
+#define C_RECORD ""
+#define C_FIELD ""
+#define C_VALUE ""
+#define C_KEY ""
+#define C_NULL ""
+#define C_MSG ""
+#define C_RAW ""
 
 #ifdef LOG_TO_FILE
 

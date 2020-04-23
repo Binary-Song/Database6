@@ -9,22 +9,36 @@
 #include "messenger.h"
 #include "time.h"
 #include "string.h"
-char temp_path[] = "/tmp/.db_staged";
+char temp_path[] = ".\\.db_staged";
 char *log_name;
 char *this_file;
 int main(int argc, char *argv[])
-{
+{ 
+    // FILE *pipe = popen("chcp", "r");
+    // if (!pipe)
+    // {
+    //     warn("Unable to open pipe.\n");
+    //     pclose(pipe);
+    //     return 1;
+    // }
+    // long code = 0;
+    // fscanf(pipe, "Active code page: %ld", &code);
+    // pclose(pipe);
+
+    // if (code != 65001)
+    // {
+    //     printf("Setting code page to utf-8...\n");
+    //     system("chcp 65001");
+    //     system("cls");
+    // }
+
     this_file = argv[0];
     memcheck_begin();
 
     log_name = new (500);
 
-    time_t now;
-    struct tm *tm_now;
-    time(&now);
-    tm_now = localtime(&now);
     string prefix = path_prefix(argv[0]);
-    snprintf(log_name, 499, "/tmp/Runtime Log %d-%d-%d %d:%02d:%02d %s.log", tm_now->tm_year + 1900, tm_now->tm_mon + 1, tm_now->tm_mday, tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec, tm_now->tm_hour > 5 && tm_now->tm_hour < 17 ? "☀️" : "🌙");
+    snprintf(log_name, 499, "Database 6 Runtime Log");
 
     log("init\n");
 
